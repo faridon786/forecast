@@ -1,0 +1,271 @@
+{% extends 'football/base.html' %}
+{% load static %}
+
+{% block title %}پیش‌بینی مسابقه - پیش‌بینی فوتبال{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="text-center">پیش‌بینی مسابقه</h3>
+                </div>
+                <div class="card-body">
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+
+                    <form method="post" class="prediction-form" id="predictionForm">
+                        {% csrf_token %}
+                        
+                        <!-- Match Teams Display -->
+                        <div class="row mb-4">
+                            <div class="col-5 text-center">
+                                <img src="{{ match.home_team.logo.url }}" alt="{{ match.home_team.name }}" class="team-logo mb-2">
+                                <h5>{{ match.home_team.name }}</h5>
+                            </div>
+                            <div class="col-2 text-center d-flex align-items-center justify-content-center">
+                                <div class="vs-badge">VS</div>
+                            </div>
+                            <div class="col-5 text-center">
+                                <img src="{{ match.away_team.logo.url }}" alt="{{ match.away_team.name }}" class="team-logo mb-2">
+                                <h5>{{ match.away_team.name }}</h5>
+                            </div>
+                        </div>
+
+                        <!-- Home Team Score -->
+                        <div class="mb-4">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="score-display">
+                                    {{ form.home_team_score }}
+                                </div>
+                                <input type="range" 
+                                       class="form-range score-slider" 
+                                       id="home-slider"
+                                       min="0" 
+                                       max="20" 
+                                       value="{{ form.home_team_score.value|default:'0' }}"
+                                       data-input-target="id_home_team_score">
+                            </div>
+                            {% if form.home_team_score.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.home_team_score.errors }}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Away Team Score -->
+                        <div class="mb-4">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="score-display">
+                                    {{ form.away_team_score }}
+                                </div>
+                                <input type="range" 
+                                       class="form-range score-slider" 
+                                       id="away-slider"
+                                       min="0" 
+                                       max="20" 
+                                       value="{{ form.away_team_score.value|default:'0' }}"
+                                       data-input-target="id_away_team_score">
+                            </div>
+                            {% if form.away_team_score.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.away_team_score.errors }}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="text-center">
+                            <button type="submit" class="btn btn-primary" id="submitBtn">
+                                <span class="normal-text">ثبت پیش‌بینی</span>
+                                <span class="loading-text d-none">
+                                    <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                    در حال پردازش...
+                                </span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .team-logo {
+        width: 100px;
+        height: 100px;
+        object-fit: contain;
+        margin-bottom: 1rem;
+    }
+
+    .vs-badge {
+        background-color: #e9ecef;
+        color: #495057;
+        padding: 5px 15px;
+        border-radius: 20px;
+        font-weight: bold;
+        display: inline-block;
+    }
+
+    .score-display {
+        min-width: 100px;
+    }
+
+    .score-input {
+        text-align: center;
+        font-size: 1.5rem;
+        font-weight: bold;
+        width: 80px;
+        height: 50px;
+        border: 2px solid #dee2e6;
+        border-radius: 8px;
+        padding: 0.5rem;
+    }
+
+    .score-input:focus {
+        border-color: #0d6efd;
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+        outline: none;
+    }
+
+    .score-slider {
+        flex-grow: 1;
+        height: 1.5rem;
+        padding: 0;
+        background: transparent;
+        -webkit-appearance: none;
+        appearance: none;
+    }
+
+    .score-slider::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 1.5rem;
+        height: 1.5rem;
+        border-radius: 50%;
+        background: #0d6efd;
+        cursor: pointer;
+        margin-top: -0.5rem;
+    }
+
+    .score-slider::-webkit-slider-runnable-track {
+        width: 100%;
+        height: 0.5rem;
+        cursor: pointer;
+        background: #dee2e6;
+        border-radius: 0.25rem;
+    }
+
+    .score-slider::-moz-range-thumb {
+        width: 1.5rem;
+        height: 1.5rem;
+        border-radius: 50%;
+        background: #0d6efd;
+        cursor: pointer;
+        border: none;
+    }
+
+    .score-slider::-moz-range-track {
+        width: 100%;
+        height: 0.5rem;
+        cursor: pointer;
+        background: #dee2e6;
+        border-radius: 0.25rem;
+    }
+
+    .score-slider:focus {
+        outline: none;
+    }
+
+    .score-slider:focus::-webkit-slider-thumb {
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+    }
+
+    .score-slider:focus::-moz-range-thumb {
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+    }
+
+    .invalid-feedback {
+        display: block;
+        color: #dc3545;
+        font-size: 0.875rem;
+        margin-top: 0.25rem;
+    }
+
+    /* Custom styling for number input */
+    input[type="number"]::-webkit-inner-spin-button,
+    input[type="number"]::-webkit-outer-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+
+    input[type="number"] {
+        -moz-appearance: textfield;
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Function to sync slider and input values
+    function syncValues(slider, input) {
+        slider.addEventListener('input', function() {
+            input.value = this.value;
+        });
+        
+        input.addEventListener('input', function() {
+            // Ensure value is between 0 and 20
+            let value = parseInt(this.value);
+            if (isNaN(value)) value = 0;
+            if (value < 0) value = 0;
+            if (value > 20) value = 20;
+            this.value = value;
+            slider.value = value;
+        });
+    }
+
+    // Sync home team score
+    const homeSlider = document.getElementById('home-slider');
+    const homeInput = document.getElementById('id_home_team_score');
+    syncValues(homeSlider, homeInput);
+
+    // Sync away team score
+    const awaySlider = document.getElementById('away-slider');
+    const awayInput = document.getElementById('id_away_team_score');
+    syncValues(awaySlider, awayInput);
+
+    // Form submission handling
+    const form = document.getElementById('predictionForm');
+    const submitBtn = document.getElementById('submitBtn');
+    const normalText = submitBtn.querySelector('.normal-text');
+    const loadingText = submitBtn.querySelector('.loading-text');
+
+    form.addEventListener('submit', function(e) {
+        // Validate form
+        if (!form.checkValidity()) {
+            e.preventDefault();
+            e.stopPropagation();
+            form.classList.add('was-validated');
+            return;
+        }
+
+        // Show loading state
+        normalText.classList.add('d-none');
+        loadingText.classList.remove('d-none');
+        submitBtn.disabled = true;
+
+        // Form will submit normally
+    });
+});
+</script>
+{% endblock %} 

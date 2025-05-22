@@ -1,0 +1,143 @@
+{% extends 'football/base.html' %}
+
+{% block title %}پرداخت - پیش‌بینی فوتبال{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">
+                    <i class="fas fa-wallet me-2"></i>پرداخت با ارز دیجیتال
+                </h4>
+            </div>
+            <div class="card-body">
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+
+                <div class="text-center mb-4">
+                    <h5 class="text-muted">حداقل مبلغ پرداختی: {{ min_amount }} دلار</h5>
+                </div>
+
+                <div class="payment-instructions mb-4">
+                    <h5 class="mb-3">دستورالعمل پرداخت:</h5>
+                    <ol class="list-group list-group-numbered mb-4">
+                        <li class="list-group-item">حداقل مبلغ {{ min_amount }} دلار را به آدرس TRC20 زیر ارسال کنید.</li>
+                        <li class="list-group-item">می‌توانید از QR کد زیر برای اسکن آدرس استفاده کنید.</li>
+                        <li class="list-group-item">پس از پرداخت، مبلغ و شناسه تراکنش (Transaction ID) را وارد کنید.</li>
+                        <li class="list-group-item">پس از تایید پرداخت، می‌توانید پیش‌بینی خود را ثبت کنید.</li>
+                    </ol>
+                </div>
+
+                <div class="wallet-info text-center mb-4">
+                    <div class="qr-code mb-3">
+                        <img src="data:image/png;base64,{{ qr_code }}" alt="QR Code" class="img-fluid">
+                    </div>
+                    <div class="wallet-address">
+                        <p class="mb-2">آدرس کیف پول TRC20:</p>
+                        <div class="input-group">
+                            <input type="text" class="form-control" value="{{ wallet_address }}" readonly id="walletAddress">
+                            <button class="btn btn-outline-primary" type="button" onclick="copyToClipboard()">
+                                <i class="fas fa-copy"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <form method="post" action="{% url 'football:payment' %}" class="transaction-form" id="paymentForm">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="amount_usd" class="form-label">مبلغ پرداختی (دلار)</label>
+                        <div class="input-group">
+                            <input type="number" step="0.01" min="{{ min_amount }}" class="form-control" id="amount_usd" name="amount_usd" required>
+                            <span class="input-group-text">USD</span>
+                        </div>
+                        <div class="form-text">حداقل مبلغ پرداختی {{ min_amount }} دلار است.</div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="transaction_id" class="form-label">شناسه تراکنش (Transaction ID)</label>
+                        <input type="text" class="form-control" id="transaction_id" name="transaction_id" required>
+                        <div class="form-text">لطفاً شناسه تراکنش را دقیقاً وارد کنید.</div>
+                    </div>
+                    <div class="d-grid">
+                        <button type="button" class="btn btn-primary btn-lg" id="submitButton">
+                            <i class="fas fa-check me-2"></i>تایید پرداخت
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .qr-code {
+        max-width: 200px;
+        margin: 0 auto;
+        padding: 10px;
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    .wallet-address {
+        max-width: 400px;
+        margin: 0 auto;
+    }
+    .list-group-item {
+        text-align: right;
+    }
+    .payment-instructions {
+        background-color: #f8f9fa;
+        padding: 20px;
+        border-radius: 10px;
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function copyToClipboard() {
+    const walletAddress = document.getElementById('walletAddress');
+    walletAddress.select();
+    document.execCommand('copy');
+    
+    // Show feedback
+    const button = event.target.closest('button');
+    const originalText = button.innerHTML;
+    button.innerHTML = '<i class="fas fa-check"></i>';
+    setTimeout(() => {
+        button.innerHTML = originalText;
+    }, 2000);
+}
+
+// Handle form submission
+document.getElementById('submitButton').addEventListener('click', function(e) {
+    const form = document.getElementById('paymentForm');
+    const amountInput = document.getElementById('amount_usd');
+    const transactionInput = document.getElementById('transaction_id');
+    
+    // Basic validation
+    if (!amountInput.value || !transactionInput.value) {
+        alert('لطفاً تمام فیلدها را پر کنید.');
+        return;
+    }
+    
+    const minAmount = {{ min_amount }};
+    if (parseFloat(amountInput.value) < minAmount) {
+        alert(`مبلغ باید حداقل ${minAmount} دلار باشد.`);
+        return;
+    }   
+    
+    // Submit the form
+    form.submit();
+});
+</script>
+{% endblock %} 

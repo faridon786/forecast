@@ -1,0 +1,222 @@
+{% extends 'football/base.html' %}
+
+{% block title %}خانه - پیش‌بینی فوتبال{% endblock %}
+
+{% block content %}
+<!-- Sport Filter -->
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <div class="d-flex justify-content-center">
+            <div class="btn-group" role="group">
+                <a href="{% url 'football:home' %}" 
+                   class="btn {% if not selected_sport %}btn-primary{% else %}btn-outline-primary{% endif %}">
+                    <i class="fas fa-globe me-1"></i>همه ورزش‌ها
+                </a>
+                {% for sport in sports %}
+                    <a href="{% url 'football:home' %}?sport={{ sport.name }}" 
+                       class="btn {% if selected_sport == sport.name %}btn-primary{% else %}btn-outline-primary{% endif %}">
+                        {% if sport.name == 'Football' %}
+                            <i class="fas fa-futbol me-1"></i>
+                        {% elif sport.name == 'Basketball' %}
+                            <i class="fas fa-basketball-ball me-1"></i>
+                        {% elif sport.name == 'Volleyball' %}
+                            <i class="fas fa-volleyball-ball me-1"></i>
+                        {% else %}
+                            <i class="fas fa-trophy me-1"></i>
+                        {% endif %}
+                        {{ sport.name }}
+                    </a>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Upcoming Matches -->
+    <div class="col-lg-8">
+        <div class="card shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">
+                    <i class="fas fa-calendar-alt me-2"></i>مسابقات پیش رو
+                    {% if selected_sport %}
+                        <small class="ms-2">({{ selected_sport }})</small>
+                    {% endif %}
+                </h4>
+            </div>
+            <div class="card-body">
+                {% if upcoming_matches %}
+                    {% for match in upcoming_matches %}
+                        <div class="match-card mb-3 p-3 border rounded">
+                            <div class="row align-items-center">
+                                <div class="col-md-4 text-center">
+                                    <img src="{{ match.home_team.logo.url }}" alt="{{ match.home_team.name }}" class="team-logo">
+                                    <h5 class="mt-2">{{ match.home_team.name }}</h5>
+                                </div>
+                                <div class="col-md-4 text-center">
+                                    <div class="vs-badge">VS</div>
+                                    <div class="match-time mt-2">
+                                        <i class="far fa-clock me-1"></i>
+                                        {{ match.date|date:"H:i" }}
+                                    </div>
+                                    <div class="match-date">
+                                        {{ match.date|date:"Y/m/d" }}
+                                    </div>
+                                    <div class="sport-badge mt-2">
+                                        <i class="fas fa-trophy me-1"></i>{{ match.sport.name }}
+                                    </div>
+                                </div>
+                                <div class="col-md-4 text-center">
+                                    <img src="{{ match.away_team.logo.url }}" alt="{{ match.away_team.name }}" class="team-logo">
+                                    <h5 class="mt-2">{{ match.away_team.name }}</h5>
+                                </div>
+                            </div>
+                            {% if user.is_authenticated %}
+                                <div class="text-center mt-3">
+                                    <a href="{% url 'football:predict_match' match.id %}" class="btn btn-primary">
+                                        <i class="fas fa-bullseye me-1"></i>پیش‌بینی
+                                    </a>
+                                </div>
+                            {% else %}
+                                <div class="text-center mt-3">
+                                    <a href="{% url 'football:login' %}" class="btn btn-outline-primary">
+                                        برای پیش‌بینی وارد شوید
+                                    </a>
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-calendar-times fa-3x text-muted mb-3"></i>
+                        <p class="text-muted">در حال حاضر مسابقه‌ای وجود ندارد.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- User Stats -->
+    <div class="col-lg-4">
+        {% if user.is_authenticated %}
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-success text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-chart-line me-2"></i>آمار شما
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <div class="stats-item mb-3">
+                        <h6>تعداد پیش‌بینی‌ها</h6>
+                        <p class="h3">{{ user_predictions_count }}</p>
+                    </div>
+                    <div class="stats-item mb-3">
+                        <h6>درصد موفقیت</h6>
+                        <p class="h3">{{ success_rate }}%</p>
+                    </div>
+                    <div class="stats-item">
+                        <h6>امتیاز کل</h6>
+                        <p class="h3">{{ total_points }}</p>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+
+        <!-- Latest Results -->
+        <div class="card shadow-sm">
+            <div class="card-header bg-info text-white">
+                <h4 class="mb-0">
+                    <i class="fas fa-trophy me-2"></i>نتایج اخیر
+                </h4>
+            </div>
+            <div class="card-body">
+                {% if recent_results %}
+                    {% for match in recent_results %}
+                        <div class="result-item mb-3 p-2 border-bottom">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div class="team-info">
+                                    <small class="text-muted">{{ match.home_team.name }}</small>
+                                    <span class="badge bg-primary mx-2">{{ match.home_score }}</span>
+                                    <span class="text-muted">-</span>
+                                    <span class="badge bg-primary mx-2">{{ match.away_score }}</span>
+                                    <small class="text-muted">{{ match.away_team.name }}</small>
+                                </div>
+                                <small class="text-muted">{{ match.match_time|date:"Y/m/d" }}</small>
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-trophy fa-3x text-muted mb-3"></i>
+                        <p class="text-muted">هنوز نتیجه‌ای ثبت نشده است.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .team-logo {
+        width: 80px;
+        height: 80px;
+        object-fit: contain;
+    }
+    .vs-badge {
+        background-color: #e9ecef;
+        color: #495057;
+        padding: 5px 15px;
+        border-radius: 20px;
+        font-weight: bold;
+    }
+    .match-card {
+        transition: transform 0.2s;
+    }
+    .match-card:hover {
+        transform: translateY(-2px);
+    }
+    .stats-item {
+        text-align: center;
+        padding: 10px;
+        border-radius: 5px;
+        background-color: #f8f9fa;
+    }
+    .result-item:hover {
+        background-color: #f8f9fa;
+    }
+    
+    /* New styles for sport filter */
+    .sport-badge {
+        display: inline-block;
+        background-color: #e9ecef;
+        color: #495057;
+        padding: 3px 10px;
+        border-radius: 15px;
+        font-size: 0.9rem;
+    }
+    
+    .btn-group {
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+    
+    .btn-group .btn {
+        border-radius: 20px !important;
+        padding: 0.5rem 1.5rem;
+    }
+    
+    @media (max-width: 768px) {
+        .btn-group {
+            flex-direction: column;
+            width: 100%;
+        }
+        
+        .btn-group .btn {
+            width: 100%;
+            margin: 0.2rem 0;
+        }
+    }
+</style>
+{% endblock %} 

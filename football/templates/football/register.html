@@ -1,0 +1,177 @@
+{% extends 'football/base.html' %}
+
+{% block title %}ثبت نام - پیش‌بینی فوتبال{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6 col-lg-5">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">
+                    <i class="fas fa-user-plus me-2"></i>ثبت نام
+                </h4>
+            </div>
+            <div class="card-body">
+                <div id="alertContainer">
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+
+                    {% if form.errors %}
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            لطفاً خطاهای زیر را برطرف کنید:
+                            {{ form.errors }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <form method="post" action="{% url 'football:register' %}" class="register-form">
+                    {% csrf_token %}
+                    
+                    <div class="form-group mb-3">
+                        <label for="username" class="form-label">نام کاربری</label>
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <i class="fas fa-user"></i>
+                            </span>
+                            <input type="text" class="form-control" id="username" name="username" 
+                                   value="{{ request.POST.username|default:'' }}" required autofocus>
+                        </div>
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <label for="email" class="form-label">ایمیل</label>
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <i class="fas fa-envelope"></i>
+                            </span>
+                            <input type="email" class="form-control" id="email" name="email" 
+                                   value="{{ request.POST.email|default:'' }}" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <label for="password1" class="form-label">رمز عبور</label>
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <i class="fas fa-lock"></i>
+                            </span>
+                            <input type="password" class="form-control" id="password1" name="password1" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group mb-4">
+                        <label for="password2" class="form-label">تکرار رمز عبور</label>
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <i class="fas fa-lock"></i>
+                            </span>
+                            <input type="password" class="form-control" id="password2" name="password2" required>
+                        </div>
+                    </div>
+
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary btn-lg" onclick="this.form.submit();">
+                            <i class="fas fa-user-plus me-2"></i>ثبت نام
+                        </button>
+                    </div>
+                </form>
+
+                <div class="text-center mt-4">
+                    <p class="mb-0">قبلاً ثبت نام کرده‌اید؟</p>
+                    <a href="{% url 'football:login' %}" class="btn btn-outline-primary mt-2">
+                        <i class="fas fa-sign-in-alt me-2"></i>ورود
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .register-form .form-control {
+        padding: 0.75rem 1rem;
+    }
+    .register-form .input-group-text {
+        background-color: #f8f9fa;
+        border-right: none;
+    }
+    .register-form .form-control {
+        border-left: none;
+    }
+    .register-form .form-control:focus {
+        border-color: #ced4da;
+        box-shadow: none;
+    }
+    .register-form .input-group:focus-within {
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+    }
+    .register-form .input-group:focus-within .input-group-text,
+    .register-form .input-group:focus-within .form-control {
+        border-color: #86b7fe;
+    }
+    .btn-primary {
+        cursor: pointer;
+    }
+    .btn-primary:disabled {
+        cursor: not-allowed;
+    }
+    .alert {
+        margin-bottom: 1rem;
+    }
+    .alert-dismissible {
+        padding-right: 1rem;
+    }
+    .alert-dismissible .btn-close {
+        padding: 1.25rem;
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Get all alerts
+    const alerts = document.querySelectorAll('.alert');
+    
+    // Configure each alert
+    alerts.forEach(alert => {
+        // Create a new bootstrap alert instance
+        const bsAlert = new bootstrap.Alert(alert);
+        
+        // Prevent auto-dismissal
+        alert.addEventListener('close.bs.alert', function (event) {
+            // Only allow manual dismissal
+            if (!event.target.classList.contains('btn-close')) {
+                event.preventDefault();
+            }
+        });
+        
+        // Add hover pause
+        alert.addEventListener('mouseenter', function() {
+            bsAlert._timeout = null;
+        });
+        
+        alert.addEventListener('mouseleave', function() {
+            // Set a longer timeout (10 seconds) when mouse leaves
+            bsAlert._timeout = setTimeout(() => {
+                bsAlert.close();
+            }, 10000);
+        });
+        
+        // Set initial timeout to 10 seconds
+        bsAlert._timeout = setTimeout(() => {
+            bsAlert.close();
+        }, 10000);
+    });
+});
+</script>
+{% endblock %} 

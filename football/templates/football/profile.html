@@ -1,0 +1,332 @@
+{% extends 'football/base.html' %}
+{% load static %}
+
+{% block title %}پروفایل کاربری - پیش‌بینی فوتبال{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- User Info Card -->
+    <div class="col-md-4">
+        <div class="card shadow mb-4">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">
+                    <i class="fas fa-user me-2"></i>اطلاعات کاربری
+                </h4>
+            </div>
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-md-4 text-center mb-3 mb-md-0">
+                        <div class="user-avatar">
+                            {% if user.user_profile.avatar %}
+                                <img src="{{ user.user_profile.avatar.url }}" alt="{{ user.username }}" class="rounded-circle profile-picture">
+                            {% else %}
+                                <i class="fas fa-user-circle fa-5x text-primary"></i>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-md-8">
+                        <div class="user-info">
+                            <h5 class="mb-3">{{ user.username }}</h5>
+                            <div class="info-item mb-2">
+                                <i class="fas fa-envelope text-muted me-2"></i>
+                                <span class="text-muted">{{ user.email }}</span>
+                            </div>
+                            <div class="info-item mb-2">
+                                <i class="fas fa-calendar text-muted me-2"></i>
+                                <span class="text-muted">تاریخ عضویت: {{ user.date_joined|date:"Y/m/d" }}</span>
+                            </div>
+                            <div class="info-item mb-2">
+                                <i class="fas fa-star text-warning me-2"></i>
+                                <span class="text-muted">امتیاز: {{ points }}</span>
+                            </div>
+                            <div class="info-item">
+                                <i class="fas fa-check-circle {% if has_paid %}text-success{% else %}text-danger{% endif %} me-2"></i>
+                                <span class="text-muted">وضعیت پرداخت: {% if has_paid %}پرداخت شده{% else %}پرداخت نشده{% endif %}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stats Card -->
+        <div class="card shadow mb-4">
+            <div class="card-header bg-success text-white">
+                <h4 class="mb-0">
+                    <i class="fas fa-chart-bar me-2"></i>آمار پیش‌بینی‌ها
+                </h4>
+            </div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-6 mb-3">
+                        <div class="stat-item">
+                            <h3 class="text-primary">{{ total_predictions }}</h3>
+                            <p class="text-muted">کل پیش‌بینی‌ها</p>
+                        </div>
+                    </div>
+                    <div class="col-6 mb-3">
+                        <div class="stat-item">
+                            <h3 class="text-success">{{ correct_predictions }}</h3>
+                            <p class="text-muted">پیش‌بینی‌های درست</p>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="stat-item">
+                            <h3 class="text-warning">{{ pending_predictions }}</h3>
+                            <p class="text-muted">در انتظار نتیجه</p>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="stat-item">
+                            <h3 class="text-info">{{ accuracy }}%</h3>
+                            <p class="text-muted">دقت پیش‌بینی</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Settings Card -->
+        <div class="card shadow">
+            <div class="card-header bg-info text-white">
+                <h4 class="mb-0">
+                    <i class="fas fa-cog me-2"></i>تنظیمات
+                </h4>
+            </div>
+            <div class="card-body">
+                <!-- Change Username Form -->
+                <form method="post" action="{% url 'football:profile' %}" class="mb-4">
+                    {% csrf_token %}
+                    <h5 class="mb-3">تغییر نام کاربری</h5>
+                    <div class="mb-3">
+                        <label for="{{ username_form.username.id_for_label }}" class="form-label">نام کاربری جدید</label>
+                        {{ username_form.username }}
+                        {% if username_form.username.errors %}
+                            <div class="text-danger">
+                                {{ username_form.username.errors }}
+                            </div>
+                        {% endif %}
+                    </div>
+                    <button type="submit" name="change_username" value="1" class="btn btn-primary">
+                        <i class="fas fa-save me-1"></i>ذخیره تغییرات
+                    </button>
+                </form>
+
+                <hr class="my-4">
+
+                <!-- Change Password Form -->
+                <form method="post" action="{% url 'football:profile' %}" class="mb-4">
+                    {% csrf_token %}
+                    <h5 class="mb-3">تغییر رمز عبور</h5>
+                    <div class="mb-3">
+                        <label for="{{ password_form.old_password.id_for_label }}" class="form-label">رمز عبور فعلی</label>
+                        {{ password_form.old_password }}
+                        {% if password_form.old_password.errors %}
+                            <div class="text-danger">
+                                {{ password_form.old_password.errors }}
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class="mb-3">
+                        <label for="{{ password_form.new_password1.id_for_label }}" class="form-label">رمز عبور جدید</label>
+                        {{ password_form.new_password1 }}
+                        {% if password_form.new_password1.errors %}
+                            <div class="text-danger">
+                                {{ password_form.new_password1.errors }}
+                            </div>
+                        {% endif %}
+                        <div class="form-text">
+                            {{ password_form.new_password1.help_text }}
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="{{ password_form.new_password2.id_for_label }}" class="form-label">تکرار رمز عبور جدید</label>
+                        {{ password_form.new_password2 }}
+                        {% if password_form.new_password2.errors %}
+                            <div class="text-danger">
+                                {{ password_form.new_password2.errors }}
+                            </div>
+                        {% endif %}
+                    </div>
+                    <button type="submit" name="change_password" value="1" class="btn btn-primary">
+                        <i class="fas fa-key me-1"></i>تغییر رمز عبور
+                    </button>
+                </form>
+
+                <hr class="my-4">
+
+                <!-- Update Profile Picture Form -->
+                <form method="post" action="{% url 'football:profile' %}" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <h5 class="mb-3">تغییر تصویر پروفایل</h5>
+                    <div class="mb-3">
+                        <div class="team-logos-grid">
+                            {% for team in teams %}
+                                {% if team.logo %}
+                                <div class="team-logo-item">
+                                    <input type="radio" name="team_logo" value="{{ team.id }}" id="team_{{ team.id }}" class="team-logo-radio">
+                                    <label for="team_{{ team.id }}" class="team-logo-label">
+                                        <img src="{{ team.logo.url }}" alt="{{ team.name }}" class="team-logo-img">
+                                        <span class="team-name">{{ team.name }}</span>
+                                    </label>
+                                </div>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                        {% if profile_form.avatar.errors %}
+                            <div class="text-danger">
+                                {{ profile_form.avatar.errors }}
+                            </div>
+                        {% endif %}
+                    </div>
+                    <button type="submit" name="update_profile" value="1" class="btn btn-primary">
+                        <i class="fas fa-image me-1"></i>بروزرسانی تصویر
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Predictions List -->
+    <div class="col-md-8">
+        <div class="card shadow">
+            <div class="card-header bg-info text-white">
+                <h4 class="mb-0">
+                    <i class="fas fa-history me-2"></i>تاریخچه پیش‌بینی‌ها
+                </h4>
+            </div>
+            <div class="card-body">
+                {% if predictions %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>تاریخ</th>
+                                    <th>مسابقه</th>
+                                    <th>پیش‌بینی شما</th>
+                                    <th>نتیجه واقعی</th>
+                                    <th>وضعیت</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for prediction in predictions %}
+                                <tr>
+                                    <td>{{ prediction.match.date|date:"Y/m/d H:i" }}</td>
+                                    <td>
+                                        {{ prediction.match.home_team.name }} vs {{ prediction.match.away_team.name }}
+                                    </td>
+                                    <td>
+                                        {{ prediction.home_team_score }} - {{ prediction.away_team_score }}
+                                    </td>
+                                    <td>
+                                        {% if prediction.match.is_finished %}
+                                            {{ prediction.match.real_home_team_score }} - {{ prediction.match.real_away_team_score }}
+                                        {% else %}
+                                            -
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if prediction.match.is_finished %}
+                                            {% if prediction.is_correct %}
+                                                <span class="badge bg-success">درست</span>
+                                            {% else %}
+                                                <span class="badge bg-danger">نادرست</span>
+                                            {% endif %}
+                                        {% else %}
+                                            <span class="badge bg-warning">در انتظار</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center py-4">
+                        <p class="text-muted">شما هنوز هیچ پیش‌بینی انجام نداده‌اید.</p>
+                        <a href="{% url 'football:home' %}" class="btn btn-primary">
+                            <i class="fas fa-futbol me-1"></i>مشاهده مسابقات
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/profile.css' %}">
+<style>
+    .user-avatar {
+        width: 120px;
+        height: 120px;
+        margin: 0 auto;
+        background-color: #f8f9fa;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 3px solid #fff;
+        box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    .profile-picture {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: 50%;
+    }
+    .user-info {
+        padding: 10px;
+    }
+    .info-item {
+        display: flex;
+        align-items: center;
+        font-size: 0.95rem;
+    }
+    .info-item i {
+        width: 20px;
+    }
+    .stat-item {
+        padding: 15px;
+        border-radius: 10px;
+        background-color: #f8f9fa;
+    }
+    .team-logos-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+    .team-logo-item {
+        position: relative;
+    }
+    .team-logo-radio {
+        display: none;
+    }
+    .team-logo-label {
+        display: block;
+        cursor: pointer;
+        text-align: center;
+        padding: 0.5rem;
+        border: 2px solid transparent;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+    }
+    .team-logo-radio:checked + .team-logo-label {
+        border-color: #0d6efd;
+        background-color: rgba(13, 110, 253, 0.1);
+    }
+    .team-logo-img {
+        width: 60px;
+        height: 60px;
+        object-fit: contain;
+        margin-bottom: 0.5rem;
+    }
+    .team-name {
+        display: block;
+        font-size: 0.8rem;
+        color: #6c757d;
+    }
+</style>
+{% endblock %} 
