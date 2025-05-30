@@ -1,0 +1,117 @@
+{% extends 'football/base.html' %}
+{% load static %}
+
+{% block title %}معرفی - پیش‌بینی فوتبال{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <div class="card shadow mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-info-circle me-2"></i>معرفی
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-4">
+                            <div class="card h-100 border-primary">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-futbol fa-2x text-primary mb-3"></i>
+                                    <h3 class="h5">پیش‌بینی مسابقات</h3>
+                                    <p>پیش‌بینی نتایج مسابقات فوتبال، والیبال و بسکتبال</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-4">
+                            <div class="card h-100 border-success">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-trophy fa-2x text-success mb-3"></i>
+                                    <h3 class="h5">جدول امتیازات</h3>
+                                    <p>رقابت با دوستان و سایر کاربران در جدول امتیازات جهانی</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-4">
+                            <div class="card h-100 border-warning">
+                                <div class="card-body text-center">
+                                    <i class="fas fa-users fa-2x text-warning mb-3"></i>
+                                    <h3 class="h5">ویژگی‌های اجتماعی</h3>
+                                    <p>ارتباط با دوستان، اشتراک‌گذاری پیش‌بینی‌ها و گفتگو درباره مسابقات</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-5">
+                        <h2 class="h3 mb-3 text-primary">
+                            <i class="fas fa-info-circle me-2"></i>نحوه کار
+                        </h2>
+                        <ol class="list-group list-group-numbered mb-4">
+                            <li class="list-group-item d-flex align-items-center">
+                                <i class="fas fa-user-plus text-primary me-3"></i>
+                                <span>ایجاد حساب کاربری و تکمیل پروفایل</span>
+                            </li>
+                            <li class="list-group-item d-flex align-items-center">
+                                <i class="fas fa-calendar-check text-success me-3"></i>
+                                <span>مشاهده مسابقات پیش رو و ثبت پیش‌بینی</span>
+                            </li>
+                            <li class="list-group-item d-flex align-items-center">
+                                <i class="fas fa-star text-warning me-3"></i>
+                                <span>کسب امتیاز برای پیش‌بینی‌های صحیح</span>
+                            </li>
+                            <li class="list-group-item d-flex align-items-center">
+                                <i class="fas fa-trophy text-info me-3"></i>
+                                <span>رقابت در جدول امتیازات</span>
+                            </li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .card {
+        transition: transform 0.2s;
+    }
+    .card:hover {
+        transform: translateY(-5px);
+    }
+    .list-group-item {
+        transition: background-color 0.2s;
+    }
+    .list-group-item:hover {
+        background-color: #f8f9fa;
+    }
+    .btn {
+        border-radius: 20px;
+        padding: 0.5rem 2rem;
+    }
+    .btn:hover {
+        transform: translateY(-2px);
+    }
+    .fa-2x {
+        font-size: 2.5rem;
+    }
+    .card-header {
+        background: linear-gradient(135deg, #1a237e 0%, #0d47a1 100%);
+    }
+    .border-primary {
+        border-color: #1a237e !important;
+    }
+    .border-success {
+        border-color: #2e7d32 !important;
+    }
+    .border-info {
+        border-color: #0277bd !important;
+    }
+    .border-warning {
+        border-color: #f57f17 !important;
+    }
+</style>
+{% endblock %} 

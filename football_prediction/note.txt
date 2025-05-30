@@ -1,0 +1,25 @@
+terms of privacy -- admin panel
+
+giudance -- admin panel
+
+adding wallet showing the amount in navabr
+
+manually previewing the deposit amount in navbar
+
+changing the logo of filters
+
+estimatted reward amount
+
+adding id for admin both in admin panel and
+
+manually changing the deposit amount and removing the altering in admin panel just like scores
+
+adding a simulated mode for predicting
+
+dynamic profile based on scores
+
+contact us section email, first name
+
+adding a report section about techinical problems of website
+
+

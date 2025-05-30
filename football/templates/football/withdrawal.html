@@ -1,0 +1,334 @@
+{% extends 'football/base.html' %}
+{% load static %}
+
+{% block title %}راهنمای برداشت وجه - predict77{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <!-- Success Message -->
+        {% if messages %}
+            {% for message in messages %}
+                {% if message.tags == 'success' %}
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        <i class="fas fa-check-circle me-2"></i>
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+
+        <!-- Balance Card -->
+        <div class="card shadow mb-4">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-md-6">
+                        <div class="balance-info">
+                            <h5 class="text-muted mb-2">موجودی کل</h5>
+                            <h3 class="text-primary mb-0">{{ user.user_profile.balance }} <small class="text-muted">دلار</small></h3>
+                        </div>
+                    </div>
+                    <div class="col-md-6 text-md-end">
+                        <a href="{% url 'football:payment' %}" class="btn btn-success">
+                            <i class="fas fa-wallet me-1"></i>شارژ حساب
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Withdrawal Form Card -->
+        <div class="card shadow mb-4">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">
+                    <i class="fas fa-money-bill-wave me-2"></i>درخواست برداشت
+                </h4>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="{{ form.amount.id_for_label }}" class="form-label">{{ form.amount.label }}</label>
+                        {{ form.amount }}
+                        {% if form.amount.errors %}
+                            <div class="text-danger">
+                                {{ form.amount.errors }}
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class="mb-3">
+                        <label for="{{ form.wallet_address.id_for_label }}" class="form-label">{{ form.wallet_address.label }}</label>
+                        {{ form.wallet_address }}
+                        {% if form.wallet_address.errors %}
+                            <div class="text-danger">
+                                {{ form.wallet_address.errors }}
+                            </div>
+                        {% endif %}
+                    </div>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-paper-plane me-1"></i>ثبت درخواست
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Withdrawal Guide Card -->
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">
+                    <i class="fas fa-info-circle me-2"></i>راهنمای برداشت وجه از حساب
+                </h4>
+            </div>
+            <div class="card-body">
+                <div class="withdrawal-guide">
+                    <p class="lead mb-4">
+                        شما می‌توانید موجودی حساب خود را در هر زمان به یکی از کیف پول‌های ارز دیجیتال خود برداشت کنید. لطفاً پیش از ثبت درخواست برداشت، نکات زیر را با دقت مطالعه فرمایید.
+                    </p>
+
+                    <div class="section mb-4">
+                        <h5 class="border-bottom pb-2">ارزهای قابل برداشت:</h5>
+                        <ol>
+                            <li>Tether (USDT) – شبکه TRC20</li>
+                            <li>Binance Coin (BNB) – شبکه BEP20</li>
+                        </ol>
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            برداشت فقط به کیف پول‌هایی که از این شبکه‌ها پشتیبانی می‌کنند امکان‌پذیر است. لطفاً از وارد کردن شبکه اشتباه خودداری فرمایید.
+                        </div>
+                    </div>
+
+                    <div class="section mb-4">
+                        <h5 class="border-bottom pb-2">شرایط برداشت:</h5>
+                        <ul>
+                            <li>حداقل مبلغ قابل برداشت: ۵ دلار</li>
+                            <li>برداشت‌ها طی حداکثر ۲۴ ساعت کاری انجام می‌شود (معمولاً کمتر از ۲ ساعت)</li>
+                            <li>هزینه کارمزد شبکه بر عهده کاربر است و از مبلغ برداشت‌شده کسر می‌شود</li>
+                            <li>فقط آدرس‌های معتبر و مطمئن قابل پذیرش هستند. لطفاً پیش از ارسال، آدرس خود را دوبار بررسی کنید</li>
+                        </ul>
+                    </div>
+
+                    <div class="section mb-4">
+                        <h5 class="border-bottom pb-2">مراحل ثبت درخواست برداشت:</h5>
+                        <ol>
+                            <li>وارد پنل کاربری خود شوید</li>
+                            <li>به بخش برداشت (Withdraw) بروید</li>
+                            <li>ارز مورد نظر خود را انتخاب کنید:
+                                <ul>
+                                    <li>USDT (TRC20)</li>
+                                    <li>BNB (BEP20)</li>
+                                </ul>
+                            </li>
+                            <li>آدرس کیف پول خود را وارد کنید</li>
+                            <li>مبلغ مورد نظر را وارد کرده و درخواست را ثبت نمایید</li>
+                        </ol>
+                    </div>
+
+                    <div class="section">
+                        <h5 class="border-bottom pb-2">نکات مهم:</h5>
+                        <ul>
+                            <li>در صورت اشتباه بودن آدرس یا انتخاب شبکه نادرست، سایت هیچ‌گونه مسئولیتی در قبال از دست رفتن دارایی شما نخواهد داشت</li>
+                            <li>لطفاً از کیف پول‌هایی مانند Trust Wallet، Binance، TronLink و سایر پلتفرم‌های معتبر استفاده نمایید</li>
+                            <li>برداشت تنها از موجودی قابل برداشت شما امکان‌پذیر است</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Withdrawal History Card -->
+        {% if withdrawal_requests %}
+        <div class="card shadow mt-4">
+            <div class="card-header bg-secondary text-white">
+                <h4 class="mb-0">
+                    <i class="fas fa-history me-2"></i>تاریخچه برداشت‌ها
+                </h4>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>تاریخ درخواست</th>
+                                <th>مبلغ</th>
+                                <th>آدرس کیف پول</th>
+                                <th>وضعیت</th>
+                                <th>یادداشت ادمین</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for request in withdrawal_requests %}
+                            <tr>
+                                <td>{{ request.created_at|date:"Y/m/d H:i" }}</td>
+                                <td>{{ request.amount }} دلار</td>
+                                <td>
+                                    <span class="text-muted small">{{ request.wallet_address|truncatechars:20 }}</span>
+                                    <button class="btn btn-sm btn-link" onclick="copyToClipboard('{{ request.wallet_address }}')">
+                                        <i class="fas fa-copy"></i>
+                                    </button>
+                                </td>
+                                <td>
+                                    {% if request.status == 'pending' %}
+                                        <span class="badge bg-warning">در انتظار تایید</span>
+                                    {% elif request.status == 'approved' %}
+                                        <span class="badge bg-success">تایید شده</span>
+                                    {% else %}
+                                        <span class="badge bg-danger">رد شده</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if request.admin_notes %}
+                                        <span class="text-muted small">{{ request.admin_notes }}</span>
+                                    {% else %}
+                                        <span class="text-muted small">-</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Payment History Card -->
+        <div class="card shadow mt-4">
+            <div class="card-header bg-info text-white">
+                <h4 class="mb-0">
+                    <i class="fas fa-money-bill-wave me-2"></i>تاریخچه پرداخت‌ها
+                </h4>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>تاریخ پرداخت</th>
+                                <th>مبلغ</th>
+                                <th>شبکه</th>
+                                <th>شناسه تراکنش</th>
+                                <th>وضعیت</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for payment in payments %}
+                            <tr>
+                                <td>{{ payment.created_at|date:"Y/m/d H:i" }}</td>
+                                <td>{{ payment.amount }} دلار</td>
+                                <td>
+                                    {% if payment.network == 'trc20' %}
+                                        <span class="badge bg-primary">USDT (TRC20)</span>
+                                    {% else %}
+                                        <span class="badge bg-warning">BNB (BEP20)</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="text-muted small">{{ payment.transaction_id|truncatechars:20 }}</span>
+                                    <button class="btn btn-sm btn-link" onclick="copyToClipboard('{{ payment.transaction_id }}')">
+                                        <i class="fas fa-copy"></i>
+                                    </button>
+                                </td>
+                                <td>
+                                    {% if payment.status == 'pending' %}
+                                        <span class="badge bg-warning">در انتظار تایید</span>
+                                    {% elif payment.status == 'verified' %}
+                                        <span class="badge bg-success">تایید شده</span>
+                                    {% elif payment.status == 'rejected' %}
+                                        <span class="badge bg-danger">رد شده</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">منقضی شده</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.balance-info h3 {
+    font-size: 2rem;
+    font-weight: 600;
+}
+
+.balance-info h3 small {
+    font-size: 1rem;
+    font-weight: normal;
+}
+
+.withdrawal-guide {
+    font-size: 1rem;
+    line-height: 1.8;
+}
+
+.withdrawal-guide h5 {
+    color: #2c3e50;
+    font-weight: 600;
+    margin-top: 1.5rem;
+}
+
+.withdrawal-guide .lead {
+    color: #2c3e50;
+    font-size: 1.1rem;
+}
+
+.withdrawal-guide ul, 
+.withdrawal-guide ol {
+    padding-right: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+.withdrawal-guide li {
+    margin-bottom: 0.5rem;
+}
+
+.withdrawal-guide .alert {
+    margin: 1rem 0;
+}
+
+.withdrawal-guide .section {
+    margin-bottom: 2rem;
+}
+
+.withdrawal-guide .section:last-child {
+    margin-bottom: 0;
+}
+
+.table th {
+    font-weight: 600;
+    background-color: #f8f9fa;
+}
+
+.btn-link {
+    padding: 0;
+    color: #6c757d;
+}
+
+.btn-link:hover {
+    color: #0d6efd;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function copyToClipboard(text) {
+    navigator.clipboard.writeText(text).then(() => {
+        // Show feedback
+        const button = event.target.closest('button');
+        const originalIcon = button.innerHTML;
+        button.innerHTML = '<i class="fas fa-check"></i>';
+        setTimeout(() => {
+            button.innerHTML = originalIcon;
+        }, 2000);
+    });
+}
+</script>
+{% endblock %} 

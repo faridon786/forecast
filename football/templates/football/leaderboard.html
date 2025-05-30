@@ -1,0 +1,74 @@
+{% extends 'football/base.html' %}
+{% load static %}
+
+{% block title %}جدول امتیازات - پیش‌بینی فوتبال{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <!-- Leaderboard Card -->
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-trophy me-2"></i>جدول امتیازات
+                    </h4>
+                </div>
+                <div class="card-body">
+                    {% if leaderboard %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                        <th>رتبه</th>
+                                        <th>نام کاربری</th>
+                                        <th>امتیاز</th>
+                                        <th>تعداد پیش‌بینی</th>
+                                        <th>درصد موفقیت</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                    {% for entry in leaderboard %}
+                                    <tr {% if entry.user == request.user %}class="table-primary"{% endif %}>
+                                        <td>
+                                        {% if forloop.counter <= 3 %}
+                                                <i class="fas fa-trophy text-warning"></i>
+                                            {% endif %}
+                                            {{ forloop.counter }}
+                                    </td>
+                                        <td>{{ entry.user.username }}</td>
+                                        <td>{{ entry.points }}</td>
+                                        <td>{{ entry.total_predictions }}</td>
+                                        <td>{{ entry.success_rate }}%</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <p class="text-muted">هنوز هیچ امتیازی ثبت نشده است.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .table th {
+        background-color: #f8f9fa;
+    }
+
+    .table-primary {
+        background-color: rgba(13, 110, 253, 0.1) !important;
+        }
+
+    .fa-trophy {
+        margin-left: 5px;
+    }
+</style>
+{% endblock %} 
