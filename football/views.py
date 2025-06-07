@@ -1,0 +1,558 @@
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth import login, logout, authenticate
+from django.contrib import messages
+from django.db.models import Count, Q, Sum, F
+from django.contrib.auth.models import User
+from django.http import JsonResponse
+from .models import Match, Prediction, Profile, Team, Payment, Sport, TermsOfService, WithdrawalRequest, UserSportPrediction
+from .forms import UserRegistrationForm, PredictionForm, TeamForm, MatchForm, UsernameChangeForm, CustomPasswordChangeForm, ProfileForm, PaymentForm, WithdrawalRequestForm, ContactMessageForm
+from django.utils import timezone
+from django.urls import reverse
+from django.core.mail import send_mail
+from django.conf import settings
+import qrcode
+import io
+import base64
+import requests
+from datetime import timedelta
+import hashlib
+import json
+from django.core.paginator import Paginator
+from django.contrib.auth import update_session_auth_hash
+import os
+from django.core.files.base import ContentFile
+from urllib.parse import urlparse
+
+def home(request):
+    """Home page view showing upcoming matches and user stats"""
+    selected_sport = request.GET.get('sport')
+    
+    # Get upcoming matches
+    upcoming_matches = Match.objects.filter(
+        date__gt=timezone.now(),
+        date__lte=timezone.now() + timezone.timedelta(days=5),
+        is_finished=False
+    )
+    
+    if selected_sport:
+        upcoming_matches = upcoming_matches.filter(sport__name=selected_sport)
+    
+    upcoming_matches = upcoming_matches.order_by('date')
+    
+    recent_results = Match.objects.select_related('home_team', 'away_team', 'sport').filter(
+        date__lt=timezone.now()
+    )
+    if selected_sport:
+        recent_results = recent_results.filter(sport__name=selected_sport)
+    recent_results = recent_results.order_by('-date')[:5]
+    
+    sports = Sport.objects.all()
+    
+    # Get user statistics if authenticated
+    if request.user.is_authenticated:
+        # Get all predictions for the user
+        user_predictions = Prediction.objects.filter(user=request.user)
+        
+        # Count correct and wrong predictions
+        correct_predictions_count = user_predictions.filter(is_correct=True).count()
+        wrong_predictions_count = user_predictions.filter(is_correct=False).count()
+        
+        # Calculate accuracy percentage
+        total_predictions = correct_predictions_count + wrong_predictions_count
+        accuracy_percentage = round((correct_predictions_count / total_predictions * 100) if total_predictions > 0 else 0)
+        
+        # Get user's total points
+        total_points = request.user.user_profile.points if hasattr(request.user, 'user_profile') else 0
+        
+        context = {
+            'upcoming_matches': upcoming_matches,
+            'recent_results': recent_results,
+            'sports': sports,
+            'selected_sport': selected_sport,
+            'correct_predictions_count': correct_predictions_count,
+            'wrong_predictions_count': wrong_predictions_count,
+            'accuracy_percentage': accuracy_percentage,
+            'total_points': total_points,
+        }
+    else:
+        context = {
+            'upcoming_matches': upcoming_matches,
+            'recent_results': recent_results,
+            'sports': sports,
+            'selected_sport': selected_sport,
+        }
+    
+    return render(request, 'football/home.html', context)
+
+@login_required
+def predict_match(request, match_id):
+    """View for making predictions on a specific match"""
+    match = get_object_or_404(Match, id=match_id)
+    profile = request.user.user_profile
+    
+    # Check if match hasn't started yet
+    if match.date <= timezone.now():
+        messages.error(request, 'این مسابقه قبلاً شروع شده است.')
+        return redirect('football:home')
+    
+    # Check if user already predicted this match
+    existing_prediction = Prediction.objects.filter(user=request.user, match=match).first()
+    if existing_prediction:
+        messages.warning(request, 'شما قبلاً برای این مسابقه پیش‌بینی کرده‌اید.')
+        return redirect('football:home')
+    
+    # Check if user needs to pay for this sport type
+    sport_prediction = UserSportPrediction.objects.filter(
+        user=request.user,
+        sport=match.sport
+    ).first()
+    
+    # Get match date
+    match_date = match.date.date()
+    
+    # Check if user has paid for this sport on the match date
+    has_paid_for_match_date = False
+    if sport_prediction and sport_prediction.has_paid and sport_prediction.payment_date:
+        if sport_prediction.payment_date == match_date:
+            has_paid_for_match_date = True
+    
+    # Determine if payment is needed
+    needs_payment = True
+    if has_paid_for_match_date:
+        needs_payment = False
+    
+    if request.method == 'POST':
+        form = PredictionForm(request.POST, match=match)
+        if form.is_valid():
+            try:
+                # Calculate total payment needed
+                total_payment_needed = 0
+                payment_reason = []
+                
+                # Check if payment is needed
+                if needs_payment:
+                    total_payment_needed = 5
+                    payment_reason.append("پیش‌بینی در این ورزش")
+                
+                # Check if user has enough balance
+                if total_payment_needed > 0 and profile.balance < total_payment_needed:
+                    messages.error(request, f'برای پیش‌بینی در این ورزش باید حداقل {total_payment_needed} دلار موجودی داشته باشید.')
+                    return redirect('football:home')
+                
+                # Save the prediction
+                prediction = form.save(commit=False)
+                prediction.user = request.user
+                prediction.match = match
+                prediction.save()
+                
+                # Create or update sport prediction
+                if not sport_prediction:
+                    sport_prediction = UserSportPrediction.objects.create(
+                        user=request.user,
+                        sport=match.sport,
+                        is_selected_for_today=True,
+                        has_paid=True
+                    )
+                else:
+                    sport_prediction.update_prediction_time()
+                    sport_prediction.has_paid = True
+                    sport_prediction.save()
+                
+                # Update payment date if payment was made
+                if total_payment_needed > 0:
+                    sport_prediction.update_payment_date(match_date)
+                    profile.balance -= total_payment_needed
+                    profile.save()
+                    messages.success(request, f'{total_payment_needed} دلار از حساب شما کسر شد ({", ".join(payment_reason)}) و پیش‌بینی شما با موفقیت ثبت شد.')
+                else:
+                    messages.success(request, 'پیش‌بینی شما با موفقیت ثبت شد.')
+                
+                return redirect('football:predictions')
+            except Exception as e:
+                messages.error(request, 'خطا در ثبت پیش‌بینی. لطفاً دوباره تلاش کنید.')
+                print(f"Error saving prediction: {e}")
+        else:
+            for field, errors in form.errors.items():
+                for error in errors:
+                    messages.error(request, f"{error}")
+    else:
+        form = PredictionForm(match=match)
+    
+    return render(request, 'football/predict_match.html', {
+        'match': match,
+        'form': form,
+        'current_balance': profile.balance,
+        'needs_payment': needs_payment,
+        'has_paid_for_match_date': has_paid_for_match_date
+    })
+
+@login_required
+def profile(request):
+    """User profile view showing prediction history and stats"""
+    profile = request.user.user_profile
+    # Optimize predictions with select_related for match, home_team, away_team, and sport
+    predictions = Prediction.objects.select_related(
+        'match', 'match__home_team', 'match__away_team', 'match__sport'
+    ).filter(user=request.user).order_by('-match__date')
+    teams = Team.objects.all().order_by('name')
+    
+    # Calculate user statistics
+    total_predictions = predictions.count()
+    correct_predictions = predictions.filter(is_correct=True).count()
+    pending_predictions = predictions.filter(match__date__gt=timezone.now()).count()
+    accuracy = round((correct_predictions / (total_predictions - pending_predictions) * 100) 
+                    if (total_predictions - pending_predictions) > 0 else 0)
+    
+    # Initialize forms
+    username_form = UsernameChangeForm(instance=request.user)
+    password_form = CustomPasswordChangeForm(request.user)
+    profile_form = ProfileForm(instance=profile)
+    
+    if request.method == 'POST':
+        if 'change_username' in request.POST:
+            username_form = UsernameChangeForm(request.POST, instance=request.user)
+            if username_form.is_valid():
+                username_form.save()
+                messages.success(request, 'نام کاربری با موفقیت تغییر کرد.')
+                return redirect('football:profile')
+            else:
+                for field, errors in username_form.errors.items():
+                    for error in errors:
+                        messages.error(request, f"{error}")
+                
+        elif 'change_password' in request.POST:
+            password_form = CustomPasswordChangeForm(request.user, request.POST)
+            if password_form.is_valid():
+                user = password_form.save()
+                update_session_auth_hash(request, user)  # Keep user logged in
+                messages.success(request, 'رمز عبور با موفقیت تغییر کرد.')
+                return redirect('football:profile')
+            else:
+                for field, errors in password_form.errors.items():
+                    for error in errors:
+                        messages.error(request, f"{error}")
+                
+        elif 'update_profile' in request.POST:
+            team_id = request.POST.get('team_logo')
+            if team_id:
+                try:
+                    team = Team.objects.get(id=team_id)
+                    if team.logo:
+                        # Copy the team logo to the user's avatar
+                        profile.avatar = team.logo
+                        profile.save()
+                        messages.success(request, 'تصویر پروفایل با موفقیت بروزرسانی شد.')
+                    else:
+                        messages.error(request, 'این تیم تصویر ندارد.')
+                except Team.DoesNotExist:
+                    messages.error(request, 'تیم انتخاب شده یافت نشد.')
+                except Exception as e:
+                    messages.error(request, 'خطا در بروزرسانی تصویر پروفایل.')
+                    print(f"Error updating profile picture: {e}")
+            else:
+                messages.error(request, 'لطفاً یک تصویر تیم را انتخاب کنید.')
+    
+    return render(request, 'football/profile.html', {
+        'predictions': predictions,
+        'total_predictions': total_predictions,
+        'correct_predictions': correct_predictions,
+        'pending_predictions': pending_predictions,
+        'accuracy': accuracy,
+        'points': profile.points,
+        'has_paid': profile.has_paid,
+        'username_form': username_form,
+        'password_form': password_form,
+        'profile_form': profile_form,
+        'teams': teams
+    })
+
+def login_view(request):
+    """User login view"""
+    if request.user.is_authenticated:
+        return redirect('football:home')
+        
+    if request.method == 'POST':
+        try:
+            username = request.POST['username'].strip()
+            password = request.POST['password'].strip()
+            
+            if not username or not password:
+                messages.error(request, 'لطفاً نام کاربری و رمز عبور را وارد کنید.')
+                return render(request, 'football/login.html')
+            
+            user = authenticate(request, username=username, password=password)
+            
+            if user is not None:
+                if user.is_active:
+                    login(request, user)
+                    messages.success(request, 'خوش آمدید!')
+                    return redirect('football:home')
+                else:
+                    messages.error(request, 'حساب کاربری شما غیرفعال است.')
+            else:
+                messages.error(request, 'نام کاربری یا رمز عبور اشتباه است.')
+        except Exception as e:
+            messages.error(request, 'خطا در ورود به سیستم. لطفاً دوباره تلاش کنید.')
+            print(f"Login error: {e}")
+    
+    return render(request, 'football/login.html')
+
+def register(request):
+    """User registration view"""
+    if request.user.is_authenticated:
+        return redirect('football:home')
+    
+    # Get referral code from URL parameter
+    referral_code = request.GET.get('ref')
+    referred_by = None
+    if referral_code:
+        try:
+            referred_by = Profile.objects.get(referral_code=referral_code)
+        except Profile.DoesNotExist:
+            messages.warning(request, 'کد دعوت نامعتبر است.')
+        
+    if request.method == 'POST':
+        form = UserRegistrationForm(request.POST)
+        if form.is_valid():
+            try:
+                user = form.save()
+                
+                # If user was referred, update their profile and add bonus to referrer
+                if referred_by:
+                    user.user_profile.referred_by = referred_by
+                    user.user_profile.save()
+                    
+                    # Award points and add $1 to referrer's balance
+                    referred_by.referral_points += 5
+                    referred_by.points += 5
+                    referred_by.add_referral_bonus()  # Add $1 to referrer's balance
+                    referred_by.save()
+                    
+                    messages.success(request, 'ثبت نام با موفقیت انجام شد! ۵ امتیاز و ۱ دلار به دعوت کننده اضافه شد.')
+                else:
+                    messages.success(request, 'ثبت نام با موفقیت انجام شد!')
+                
+                login(request, user)
+                return redirect('football:home')
+            except Exception as e:
+                # Log the error for debugging
+                print(f"Registration error: {e}")
+                # Check if it's a profile-related error
+                if "profile" in str(e).lower():
+                    messages.error(request, 'خطا در ایجاد پروفایل کاربری. لطفاً دوباره تلاش کنید.')
+                else:
+                    messages.error(request, 'خطا در ثبت نام. لطفاً دوباره تلاش کنید.')
+        else:
+            # Form validation failed
+            for field, errors in form.errors.items():
+                for error in errors:
+                    messages.error(request, f"{error}")
+    else:
+        form = UserRegistrationForm()
+    
+    return render(request, 'football/register.html', {
+        'form': form,
+        'referral_code': referral_code
+    })
+
+@login_required
+def logout_view(request):
+    """User logout view"""
+    logout(request)
+    messages.success(request, 'شما با موفقیت خارج شدید.')
+    return redirect('football:home')
+
+@login_required
+def predictions(request):
+    """View showing all predictions for the user"""
+    predictions = Prediction.objects.filter(user=request.user).order_by('-match__date')
+    return render(request, 'football/predictions.html', {
+        'predictions': predictions
+    })
+
+@login_required
+def payment_view(request):
+    """Handle payment submission and verification"""
+    # Get wallet addresses from settings
+    trc20_wallet_address = settings.TRC20_WALLET_ADDRESS
+    bnb_wallet_address = settings.BNB_WALLET_ADDRESS
+
+    # Generate QR codes
+    trc20_qr = qrcode.QRCode(version=1, box_size=10, border=5)
+    trc20_qr.add_data(trc20_wallet_address)
+    trc20_qr.make(fit=True)
+    trc20_img = trc20_qr.make_image(fill_color="black", back_color="white")
+    
+    bnb_qr = qrcode.QRCode(version=1, box_size=10, border=5)
+    bnb_qr.add_data(bnb_wallet_address)
+    bnb_qr.make(fit=True)
+    bnb_img = bnb_qr.make_image(fill_color="black", back_color="white")
+
+    # Convert QR codes to base64
+    trc20_buffer = io.BytesIO()
+    trc20_img.save(trc20_buffer, format='PNG')
+    trc20_qr_code = base64.b64encode(trc20_buffer.getvalue()).decode()
+
+    bnb_buffer = io.BytesIO()
+    bnb_img.save(bnb_buffer, format='PNG')
+    bnb_qr_code = base64.b64encode(bnb_buffer.getvalue()).decode()
+
+    if request.method == 'POST':
+        form = PaymentForm(request.POST)
+        if form.is_valid():
+            payment = form.save(commit=False)
+            payment.user = request.user
+            payment.save()
+            return redirect('football:payment_status')
+    else:
+        form = PaymentForm()
+
+    context = {
+        'form': form,
+        'trc20_wallet_address': trc20_wallet_address,
+        'bnb_wallet_address': bnb_wallet_address,
+        'trc20_qr_code': trc20_qr_code,
+        'bnb_qr_code': bnb_qr_code,
+    }
+    return render(request, 'football/payment.html', context)
+
+@login_required
+def payment_status(request):
+    """View for checking payment status"""
+    payments = Payment.objects.filter(user=request.user).order_by('-created_at')
+    return render(request, 'football/payment_status.html', {
+        'payments': payments
+    })
+
+@login_required
+def leaderboard(request):
+    """Display the leaderboard of users"""
+    # Get all users with their profiles and points
+    leaderboard = []
+    users = User.objects.select_related('user_profile').order_by('-user_profile__points')
+    
+    for user in users:
+        # Get all predictions for the user
+        user_predictions = Prediction.objects.filter(user=user).select_related('match', 'match__home_team', 'match__away_team')
+        
+        # Count correct and wrong predictions
+        correct_predictions_count = user_predictions.filter(is_correct=True).count()
+        wrong_predictions_count = user_predictions.filter(is_correct=False).count()
+        
+        # Calculate accuracy percentage
+        total_predictions = correct_predictions_count + wrong_predictions_count
+        accuracy_percentage = round((correct_predictions_count / total_predictions * 100) if total_predictions > 0 else 0)
+        
+        leaderboard.append({
+            'user': user,
+            'points': user.user_profile.points,
+            'total_predictions': total_predictions,
+            'correct_predictions': correct_predictions_count,
+            'wrong_predictions': wrong_predictions_count,
+            'accuracy_percentage': accuracy_percentage,
+            'predictions': user_predictions.order_by('-match__date')[:5]  # Get last 5 predictions
+        })
+
+    context = {
+        'leaderboard': leaderboard,
+    }
+    return render(request, 'football/leaderboard.html', context)
+
+def terms(request):
+    """View for displaying terms of service"""
+    terms = TermsOfService.objects.first()
+    return render(request, 'football/terms.html', {
+        'terms': terms
+    })
+
+@login_required
+def withdrawal_request(request):
+    """Handle withdrawal requests"""
+    if request.method == 'POST':
+        form = WithdrawalRequestForm(request.POST)
+        if form.is_valid():
+            withdrawal = form.save(commit=False)
+            withdrawal.user = request.user
+            withdrawal.save()
+            messages.success(request, 'درخواست برداشت شما با موفقیت ثبت شد و در حال بررسی است.')
+            return redirect('football:withdrawal_request')
+    else:
+        form = WithdrawalRequestForm()
+    
+    # Get user's withdrawal history
+    withdrawal_requests = WithdrawalRequest.objects.filter(user=request.user).order_by('-created_at')
+    
+    # Get user's payment history
+    payments = Payment.objects.filter(user=request.user).order_by('-created_at')
+    
+    return render(request, 'football/withdrawal.html', {
+        'form': form,
+        'withdrawal_requests': withdrawal_requests,
+        'payments': payments
+    })
+
+def contact_view(request):
+    submitted = False
+    if request.method == 'POST':
+        form = ContactMessageForm(request.POST)
+        if form.is_valid():
+            form.save()
+            submitted = True
+    else:
+        form = ContactMessageForm()
+    return render(request, 'football/contact.html', {'form': form, 'submitted': submitted})
+
+@login_required
+def referral_view(request):
+    """View for managing referral system"""
+    profile = request.user.user_profile
+    
+    # Get referral statistics
+    referral_count = profile.get_referral_count()
+    referral_code = profile.referral_code
+    
+    # Get the domain from the request
+    domain = request.get_host()
+    # Construct the full referral link
+    referral_link = f"https://{domain}/register?ref={referral_code}"
+    
+    referral_points = profile.referral_points
+    
+    # Get list of referred users
+    referred_users = Profile.objects.filter(referred_by=profile).select_related('user')
+    
+    context = {
+        'referral_count': referral_count,
+        'referral_link': referral_link,
+        'referral_points': referral_points,
+        'referred_users': referred_users,
+    }
+    
+    return render(request, 'football/referral.html', context)
+
+@login_required
+def future_matches(request):
+    """View showing matches beyond the 5-day window"""
+    selected_sport = request.GET.get('sport')
+    
+    # Get matches beyond 5 days
+    future_matches = Match.objects.filter(
+        date__gt=timezone.now() + timezone.timedelta(days=5),
+        is_finished=False
+    )
+    
+    if selected_sport:
+        future_matches = future_matches.filter(sport__name=selected_sport)
+    
+    future_matches = future_matches.order_by('date')
+    
+    sports = Sport.objects.all()
+    
+    context = {
+        'future_matches': future_matches,
+        'sports': sports,
+        'selected_sport': selected_sport,
+    }
+    
+    return render(request, 'football/future_matches.html', context)
