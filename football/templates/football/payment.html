@@ -1,0 +1,229 @@
+{% extends 'football/base.html' %}
+{% load static %}
+
+{% block title %}پرداخت{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Payment Form Card -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-credit-card me-2"></i>پرداخت
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="{{ form.amount_usd.id_for_label }}" class="form-label">مبلغ (دلار)</label>
+                                    {{ form.amount_usd }}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="{{ form.network.id_for_label }}" class="form-label">شبکه پرداخت</label>
+                                    {{ form.network }}
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <div class="form-group">
+                                    <label for="{{ form.transaction_id.id_for_label }}" class="form-label">شناسه تراکنش</label>
+                                    {{ form.transaction_id }}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="text-center mt-4">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-check-circle me-2"></i>ثبت پرداخت
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Wallet Addresses and QR Codes -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-wallet me-2"></i>آدرس‌های کیف پول
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <!-- TRC20 Wallet -->
+                        <div class="col-md-6 mb-4">
+                            <div class="wallet-section p-3 bg-light rounded">
+                                <h5 class="mb-3">USDT (TRC20)</h5>
+                                <div class="qr-code mb-3 text-center">
+                                    <img src="data:image/png;base64,{{ trc20_qr_code }}" alt="TRC20 QR Code" class="img-fluid">
+                                </div>
+                                <div class="wallet-address">
+                                    <p class="mb-2">آدرس کیف پول:</p>
+                                    <div class="input-group">
+                                        <input type="text" class="form-control" value="{{ trc20_wallet_address }}" readonly>
+                                        <button class="btn btn-outline-primary copy-btn" data-clipboard-text="{{ trc20_wallet_address }}">
+                                            <i class="fas fa-copy"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- BNB Wallet -->
+                        <div class="col-md-6 mb-4">
+                            <div class="wallet-section p-3 bg-light rounded">
+                                <h5 class="mb-3">BNB (BEP20)</h5>
+                                <div class="qr-code mb-3 text-center">
+                                    <img src="data:image/png;base64,{{ bnb_qr_code }}" alt="BNB QR Code" class="img-fluid">
+                                </div>
+                                <div class="wallet-address">
+                                    <p class="mb-2">آدرس کیف پول:</p>
+                                    <div class="input-group">
+                                        <input type="text" class="form-control" value="{{ bnb_wallet_address }}" readonly>
+                                        <button class="btn btn-outline-primary copy-btn" data-clipboard-text="{{ bnb_wallet_address }}">
+                                            <i class="fas fa-copy"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Payment Guide -->
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-info-circle me-2"></i>راهنمای پرداخت
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <div class="payment-guide">
+                        <div class="alert alert-info">
+                            <h5 class="alert-heading">
+                                <i class="fas fa-info-circle me-2"></i>راهنمای پرداخت
+                            </h5>
+                            <p class="mb-0">برای استفاده از خدمات سایت ، لطفاً پرداخت خود را طبق مراحل زیر انجام دهید.</p>
+
+                            <h5 class="mt-4">ارزهای مورد قبول:</h5>
+                            <ol class="mb-4">
+                                <li>Tether (USDT) - شبکه TRC20</li>
+                                <li>Binance Coin (BNB) - شبکه BEP20</li>
+                            </ol>
+
+                            <div class="alert alert-warning">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                توجه: فقط این دو ارز و شبکه پشتیبانی می‌شوند. از ارسال به سایر شبکه‌ها جداً خودداری فرمایید. در صورت ارسال اشتباه، مبلغ قابل برگشت نیست.
+                            </div>
+
+                            <hr class="my-4">
+
+                            <h5>مراحل پرداخت:</h5>
+
+                            <h6 class="mt-4">1. مقدار مورد نظر خود را شارژ کنید:</h6>
+                            <p>به یکی از آدرس‌های کیف پول ما که در بخش پرداخت سایت نمایش داده شده، مبلغ دلخواه خود را ارسال کنید. لطفاً دقت فرمایید:</p>
+                            <ul>
+                                <li>کارمزد شبکه به عهده کاربر است.</li>
+                                <li>برای مثال: اگر قصد دارید 5 دلار شارژ کنید و کارمزد شبکه 0.3 دلار است، مبلغ 5.3 دلار ارسال نمایید.</li>
+                                <li>در هر صورت سیستم به صورت خودکار عدد که واریز کرده اید را محاسبه میکند سپس شارژ میکند</li>
+                                <li>ما فقط مبلغ دریافتی خالص را در سایت به حساب شما اضافه می‌کنیم.</li>
+                            </ul>
+
+                            <hr class="my-4">
+
+                            <h6>2. ارسال هش تراکنش (TXID):</h6>
+                            <p>پس از انجام پرداخت، هش تراکنش یا Transaction ID (TXID) را کپی کرده و در قسمت مربوطه در سایت ارسال نمایید.</p>
+                            <ul>
+                                <li>نیازی به ارسال اسکرین‌شات یا رسید نیست.</li>
+                                <li>فقط هش تراکنش (TXID) کافیست.</li>
+                                <li>لطفاً از ارسال هش اشتباه خودداری فرمایید؛ در غیر این صورت پرداخت تأیید نمی‌شود.</li>
+                            </ul>
+
+                            <hr class="my-4">
+
+                            <h6>3. تأیید و شارژ حساب:</h6>
+                            <p>پس از ارسال TXID، پرداخت شما توسط پشتیبانی بررسی شده و مبلغ خالص دریافتی به حساب شما در سایت اضافه خواهد شد.</p>
+                            <ul>
+                                <li>تأیید پرداخت‌ها معمولاً بین ۵ دقیقه تا ۲ ساعت کاری زمان می‌برد.</li>
+                                <li>در صورت تأخیر بیشتر، لطفاً از طریق پشتیبانی با ما تماس بگیرید.</li>
+                            </ul>
+
+                            <hr class="my-4">
+
+                            <h5>چند نکته مهم:</h5>
+                            <ul>
+                                <li>در صورت کم یا زیاد شدن واریز ارز به ادرس های موجود سیستم عدد دقیقی که واریز کرده اید با احتساب کارمزد را محاسبه میکند و سپس حساب شارژ میشود.</li>
+                                <li>به هر حال سیستم عددی که واریز شده را مورد نظر قرار میدهد</li>
+                                <li>قبل از ارسال ارز، از صحت آدرس و شبکه مطمئن شوید.</li>
+                                <li>از ارسال ارز کمتر از ۱ دلار خودداری فرمایید (به دلیل محدودیت‌های شبکه و کارمزد).</li>
+                                <li>در صورتی که هش تراکنش معتبر ارسال نکنید، حساب شما شارژ نخواهد شد.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .wallet-section {
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+    }
+    
+    .qr-code img {
+        max-width: 200px;
+        border: 1px solid #dee2e6;
+        padding: 10px;
+        border-radius: 8px;
+    }
+    
+    .wallet-address input {
+        font-family: monospace;
+        font-size: 0.9rem;
+    }
+    
+    .copy-btn {
+        min-width: 45px;
+    }
+    
+    .list-group-item {
+        border-right: none;
+        border-left: 1px solid #dee2e6;
+    }
+    
+    .form-control:focus {
+        border-color: #80bdff;
+        box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.8/clipboard.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize clipboard.js
+    var clipboard = new ClipboardJS('.copy-btn');
+    
+    // Show success message when copied
+    clipboard.on('success', function(e) {
+        var btn = e.trigger;
+        var originalText = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-check"></i>';
+        setTimeout(function() {
+            btn.innerHTML = originalText;
+        }, 2000);
+        e.clearSelection();
+    });
+});
+</script>
+{% endblock %} 

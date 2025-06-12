@@ -1,0 +1,194 @@
+{% extends 'football/base.html' %}
+{% load static %}
+
+{% block title %}سیستم دعوت از دوستان - predict777{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <!-- Referral Stats Card -->
+        <div class="col-md-4">
+            <div class="card shadow mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-users me-2"></i>آمار دعوت
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <div class="text-center mb-4">
+                        <div class="referral-badge mb-3">
+                            <i class="fas fa-user-plus fa-3x text-primary"></i>
+                        </div>
+                        <h4 class="mb-2">دعوت از دوستان</h4>
+                        <p class="text-muted">با دعوت از دوستان خود، امتیاز و پاداش دریافت کنید!</p>
+                    </div>
+
+                    <div class="referral-stats">
+                        <div class="stat-row">
+                            <div class="stat-item">
+                                <i class="fas fa-user-friends text-success"></i>
+                                <div class="stat-info">
+                                    <span class="stat-label">تعداد دعوت‌های موفق</span>
+                                    <span class="stat-value">{{ referral_count }}</span>
+                                </div>
+                            </div>
+                            <div class="stat-item">
+                                <i class="fas fa-star text-warning"></i>
+                                <div class="stat-info">
+                                    <span class="stat-label">امتیاز دعوت</span>
+                                    <span class="stat-value">{{ referral_points }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Referral Link Card -->
+        <div class="col-md-8">
+            <div class="card shadow mb-4">
+                <div class="card-header bg-success text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-link me-2"></i>لینک دعوت شما
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <div class="referral-link-container">
+                        <div class="input-group mb-3">
+                            <input type="text" class="form-control" value="{{ referral_link }}" id="referralLink" readonly>
+                            <button class="btn btn-primary" type="button" onclick="copyReferralLink()">
+                                <i class="fas fa-copy me-1"></i>کپی
+                            </button>
+                        </div>
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            با هر دعوت موفق، ۵ امتیاز و ۱ دلار به حساب شما اضافه می‌شود.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Referred Users List -->
+            <div class="card shadow">
+                <div class="card-header bg-info text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-list me-2"></i>کاربران دعوت شده
+                    </h4>
+                </div>
+                <div class="card-body">
+                    {% if referred_users %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>نام کاربری</th>
+                                        <th>تاریخ ثبت نام</th>
+                                        <th>امتیاز</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for referred in referred_users %}
+                                    <tr>
+                                        <td>{{ referred.user.username }}</td>
+                                        <td>{{ referred.created_at|date:"Y/m/d" }}</td>
+                                        <td>{{ referred.points }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <p class="text-muted">شما هنوز هیچ کاربری را دعوت نکرده‌اید.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function copyReferralLink() {
+    var copyText = document.getElementById("referralLink");
+    copyText.select();
+    copyText.setSelectionRange(0, 99999);
+    navigator.clipboard.writeText(copyText.value);
+    
+    // Show success message
+    alert("لینک دعوت با موفقیت کپی شد!");
+}
+</script>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .referral-badge {
+        width: 100px;
+        height: 100px;
+        margin: 0 auto;
+        background: #f8f9fa;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+
+    .referral-stats {
+        background: #f8f9fa;
+        border-radius: 10px;
+        padding: 1rem;
+    }
+
+    .stat-row {
+        display: flex;
+        justify-content: space-around;
+        gap: 1rem;
+    }
+
+    .stat-item {
+        display: flex;
+        align-items: center;
+        gap: 0.8rem;
+        padding: 0.5rem;
+    }
+
+    .stat-info {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .stat-label {
+        font-size: 0.8rem;
+        color: #6c757d;
+    }
+
+    .stat-value {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #212529;
+    }
+
+    .referral-link-container {
+        padding: 1rem;
+    }
+
+    .input-group {
+        direction: ltr;
+    }
+
+    .input-group .form-control {
+        border-top-left-radius: 0;
+        border-bottom-left-radius: 0;
+    }
+
+    .input-group .btn {
+        border-top-right-radius: 0;
+        border-bottom-right-radius: 0;
+    }
+</style>
+{% endblock %} 

@@ -1,0 +1,155 @@
+{% extends 'football/base.html' %}
+{% load static %}
+
+{% block title %}مسابقات آینده - predict777{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Sport Filters -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-center align-items-center">
+                        <a href="{% url 'football:future_matches' %}" class="btn btn-outline-primary mx-2 {% if not selected_sport %}active{% endif %}">
+                            <img src="{% static 'images/all-sports.svg' %}" alt="همه" class="sport-icon me-2">
+                            همه
+                        </a>
+                        {% for sport in sports %}
+                        <a href="{% url 'football:future_matches' %}?sport={{ sport.name }}" 
+                           class="btn btn-outline-primary mx-2 {% if selected_sport == sport.name %}active{% endif %}">
+                            {% if sport.icon %}
+                                <img src="{{ sport.icon.url }}" alt="{{ sport.display_name }}" class="sport-icon me-2">
+                            {% endif %}
+                            {{ sport.display_name }}
+                        </a>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Future Matches -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-calendar-alt me-2"></i>مسابقات آینده
+                        {% if selected_sport %}
+                            <small class="ms-2">({{ selected_sport }})</small>
+                        {% endif %}
+                    </h4>
+                </div>
+                <div class="card-body">
+                    {% if future_matches %}
+                        {% for match in future_matches %}
+                            <div class="match-card mb-3 p-3 border rounded">
+                                <div class="row align-items-center">
+                                    <div class="col-md-4 text-center">
+                                        <img src="{{ match.home_team.logo.url }}" alt="{{ match.home_team.name }}" class="team-logo">
+                                        <h5 class="mt-2">{{ match.home_team.name }}(میزبان)</h5>
+                                    </div>
+                                    <div class="col-md-4 text-center">
+                                        <div class="match-time mt-2">
+                                            <i class="far fa-clock me-1"></i>
+                                            {{ match.date|date:"H:i" }}
+                                        </div>
+                                        <div class="match-venue mt-2">
+                                            <i class="fas fa-map-marker-alt me-1"></i>{{ match.venue|default:"-" }}
+                                        </div>
+                                        <div class="match-date">
+                                            {{ match.date|date:"Y/m/d" }}
+                                        </div>
+                                        
+                                        <div class="vs-badge">VS</div>
+                                        <div class="sport-badge mt-2">
+                                            <i class="fas fa-trophy me-1"></i>{{ match.sport.name }}
+                                        </div>
+                                        <div class="match-description mt-2">
+                                            <button class="btn btn-link p-0 text-info desc-toggle" type="button" data-bs-toggle="collapse" data-bs-target="#desc-{{ match.id }}" aria-expanded="false" aria-controls="desc-{{ match.id }}">
+                                                <i class="fas fa-info-circle me-1"></i>جزيیات جوایز
+                                                <i class="fas fa-chevron-down ms-1 arrow-icon"></i>
+                                            </button>
+                                            <div class="collapse" id="desc-{{ match.id }}">
+                                                <div class="card card-body bg-light border-0 mt-2">
+                                                    {{ match.description|default:"توضیحاتی برای این مسابقه ثبت نشده است." }}
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="text-muted mt-2">
+                                            <small><i class="fas fa-info-circle me-1"></i>پیش‌بینی برای این مسابقه در دسترس نیست</small>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4 text-center">
+                                        <img src="{{ match.away_team.logo.url }}" alt="{{ match.away_team.name }}" class="team-logo">
+                                        <h5 class="mt-2">{{ match.away_team.name }}(مهمان)</h5>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-calendar-times fa-3x text-muted mb-3"></i>
+                            <p class="text-muted">در حال حاضر مسابقه‌ای وجود ندارد.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .team-logo {
+        width: 80px;
+        height: 80px;
+        object-fit: contain;
+    }
+    .vs-badge {
+        background-color: #e9ecef;
+        color: #495057;
+        padding: 5px 15px;
+        border-radius: 20px;
+        font-weight: bold;
+    }
+    .match-card {
+        transition: transform 0.2s;
+    }
+    .match-card:hover {
+        transform: translateY(-2px);
+    }
+    .sport-badge {
+        display: inline-block;
+        background-color: #e9ecef;
+        color: #495057;
+        padding: 3px 10px;
+        border-radius: 15px;
+        font-size: 0.9rem;
+    }
+    .sport-icon {
+        width: 24px;
+        height: 24px;
+        object-fit: contain;
+        transition: transform 0.3s ease;
+    }
+    .sport-icon:hover {
+        transform: scale(1.1);
+    }
+    .btn-outline-primary .sport-icon {
+        color: #0d6efd;
+    }
+    .btn-outline-primary.active .sport-icon {
+        color: white;
+    }
+    .arrow-icon {
+        transition: transform 0.3s ease;
+    }
+    .desc-toggle[aria-expanded="true"] .arrow-icon {
+        transform: rotate(180deg);
+    }
+</style>
+{% endblock %} 
