@@ -1,0 +1,576 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}predict777{% endblock %}</title>
+    <!-- Bootstrap RTL CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- Custom CSS -->
+    <style>
+        :root {
+            --primary-color: rgb(38, 150, 229);
+            --primary-dark: rgb(28, 120, 200);
+            --primary-light: rgb(58, 170, 249);
+            --primary-gradient: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary-color) 100%);
+        }
+
+        html, body {
+            height: 100%;
+            margin: 0;
+        }
+        
+        body {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        
+        main {
+            flex: 1 0 auto;
+        }
+        
+        footer {
+            flex-shrink: 0;
+            margin-top: auto;
+        }
+
+        /* Modern Navbar Styles */
+        .navbar {
+            background: var(--primary-gradient);
+            padding: 1rem 0;
+            box-shadow: 0 2px 15px rgba(38, 150, 229, 0.2);
+        }
+
+        .navbar-brand {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #fff !important;
+            padding: 0.5rem 1rem;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+
+        .navbar-brand:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .navbar-nav {
+            gap: 0.5rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .nav-link {
+            color: rgba(255, 255, 255, 0.9) !important;
+            transition: all 0.3s ease;
+            padding: 0.5rem 0.75rem;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            white-space: nowrap;
+            font-size: 0.9rem;
+        }
+
+        .nav-link:hover {
+            color: #fff !important;
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .nav-link.active {
+            color: #fff !important;
+            background: rgba(255, 255, 255, 0.2);
+            font-weight: 600;
+        }
+
+        .nav-link i {
+            margin-left: 0.5rem;
+            font-size: 1rem;
+        }
+
+        .user-menu {
+            display: flex;
+            align-items: center;
+            margin-right: 0;
+            margin-left: auto;
+        }
+
+        .user-profile-menu {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.25rem 0.5rem;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+        }
+
+        .user-avatar {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 0.9rem;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .user-avatar:hover {
+            transform: scale(1.1);
+            border-color: rgba(255, 255, 255, 0.5);
+        }
+
+        .profile-picture {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .username {
+            color: #fff;
+            font-weight: 500;
+            font-size: 0.9rem;
+            white-space: nowrap;
+        }
+
+        .user-profile-menu .nav-link {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        .payment-display {
+            background: linear-gradient(45deg, var(--primary-color), var(--primary-light));
+            color: #fff;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-weight: bold;
+            box-shadow: 0 0 10px rgba(38, 150, 229, 0.5);
+            animation: glow 2s infinite;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+
+        @keyframes glow {
+            0% { box-shadow: 0 0 5px rgba(38, 150, 229, 0.5); }
+            50% { box-shadow: 0 0 20px rgba(38, 150, 229, 0.8); }
+            100% { box-shadow: 0 0 5px rgba(38, 150, 229, 0.5); }
+        }
+
+        @media (max-width: 1200px) {
+            .navbar-nav {
+                gap: 0.25rem;
+            }
+
+            .nav-link {
+                padding: 0.5rem;
+                font-size: 0.85rem;
+            }
+            
+            .nav-link i {
+                font-size: 0.9rem;
+            }
+        }
+
+        @media (max-width: 992px) {
+            .navbar-nav {
+                margin-bottom: 1rem;
+                gap: 0.5rem;
+            }
+
+            .user-menu {
+                width: 100%;
+                margin-right: 0;
+            }
+
+            .user-menu .d-flex {
+                flex-direction: column;
+                width: 100%;
+                gap: 0.5rem !important;
+            }
+
+            .leaderboard-link {
+                width: 100%;
+                justify-content: center;
+                background: rgba(255, 255, 255, 0.1);
+                border-radius: 12px;
+                padding: 0.75rem 1rem;
+            }
+
+            .user-profile-menu {
+                width: 100%;
+                justify-content: space-between;
+                padding: 0.5rem;
+            }
+
+            .nav-link {
+                padding: 0.5rem;
+                justify-content: center;
+            }
+        }
+
+        /* Card Styles */
+        .card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(38, 150, 229, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(38, 150, 229, 0.15);
+        }
+
+        .card-header {
+            background: var(--primary-gradient);
+            color: white;
+            border-radius: 15px 15px 0 0 !important;
+            padding: 1rem;
+        }
+
+        /* Button Styles */
+        .btn-primary {
+            background: var(--primary-color);
+            border-color: var(--primary-color);
+            box-shadow: 0 2px 5px rgba(38, 150, 229, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            border-color: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(38, 150, 229, 0.3);
+        }
+
+        .btn-outline-primary {
+            color: var(--primary-color);
+            border-color: var(--primary-color);
+            transition: all 0.3s ease;
+        }
+
+        .btn-outline-primary:hover {
+            background: var(--primary-color);
+            border-color: var(--primary-color);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(38, 150, 229, 0.3);
+        }
+
+        /* Alert Styles */
+        .alert {
+            border-radius: 10px;
+            border: none;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .alert-primary {
+            background-color: rgba(38, 150, 229, 0.1);
+            color: var(--primary-dark);
+            border-right: 4px solid var(--primary-color);
+        }
+
+        /* Footer Styles */
+        footer {
+            background: var(--primary-gradient);
+            color: white;
+            padding: 2rem 0;
+            margin-top: 3rem;
+        }
+
+        footer h5 {
+            color: white;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        footer p {
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        /* Form Styles */
+        .form-control:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.25rem rgba(38, 150, 229, 0.25);
+        }
+
+        .form-label {
+            color: var(--primary-dark);
+            font-weight: 500;
+        }
+
+        /* Badge Styles */
+        .badge.bg-primary {
+            background: var(--primary-color) !important;
+        }
+
+        /* Table Styles */
+        .table thead th {
+            background-color: rgba(38, 150, 229, 0.1);
+            color: var(--primary-dark);
+            font-weight: 600;
+            border-bottom: 2px solid var(--primary-color);
+        }
+
+        .table-hover tbody tr:hover {
+            background-color: rgba(38, 150, 229, 0.05);
+        }
+
+        /* Modern Expand Button Styles */
+        .btn-expand {
+            position: relative;
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-weight: 600;
+            font-size: 0.95rem;
+            letter-spacing: 0.5px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(79, 70, 229, 0.2);
+        }
+
+        .btn-expand:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(79, 70, 229, 0.3);
+            background: linear-gradient(135deg, #4f46e5 0%, #4338ca 100%);
+        }
+
+        .btn-expand:active {
+            transform: translateY(1px);
+        }
+
+        .btn-expand::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(
+                90deg,
+                transparent,
+                rgba(255, 255, 255, 0.2),
+                transparent
+            );
+            transition: 0.5s;
+        }
+
+        .btn-expand:hover::before {
+            left: 100%;
+        }
+
+        .btn-expand i {
+            margin-right: 8px;
+            font-size: 1.1rem;
+            vertical-align: middle;
+        }
+
+        /* Add a subtle pulse animation */
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 4px 15px rgba(79, 70, 229, 0.2);
+            }
+            50% {
+                box-shadow: 0 4px 25px rgba(79, 70, 229, 0.4);
+            }
+            100% {
+                box-shadow: 0 4px 15px rgba(79, 70, 229, 0.2);
+            }
+        }
+
+        .btn-expand {
+            animation: pulse 2s infinite;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .btn-expand {
+                padding: 10px 20px;
+                font-size: 0.9rem;
+            }
+        }
+
+        .footer a {
+            color: white !important;
+            text-decoration: none;
+        }
+        .footer a:hover {
+            color: #e9ecef !important;
+            text-decoration: underline;
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg">
+        <div class="container">
+            <a class="navbar-brand" href="{% url 'football:home' %}">
+                <i class="fas fa-futbol me-2"></i>predict777
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav mx-auto mb-2 mb-lg-0">
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'home' %}active{% endif %}" 
+                           href="{% url 'football:home' %}">
+                           <i class="fas fa-home"></i>
+                           <span>خانه</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'predictions' %}active{% endif %}" 
+                           href="{% url 'football:predictions' %}">
+                           <i class="fas fa-chart-line"></i>
+                           <span>پیش‌بینی‌ها</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'leaderboard' %}active{% endif %}" 
+                           href="{% url 'football:leaderboard' %}">
+                           <i class="fas fa-trophy"></i>
+                           <span>جدول امتیازات</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'future_matches' %}active{% endif %}" 
+                           href="{% url 'football:future_matches' %}">
+                           <i class="fas fa-calendar-alt"></i>
+                           <span>مسابقات آینده</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'terms' %}active{% endif %}" 
+                           href="{% url 'football:terms' %}">
+                           <i class="fas fa-file-contract"></i>
+                           <span>قوانین و مقررات</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'referral' %}active{% endif %}" 
+                           href="{% url 'football:referral' %}">
+                           <i class="fas fa-user-plus"></i>
+                           <span>دعوت از دوستان</span>
+                        </a>
+                    </li>
+                </ul>
+                <div class="user-menu">
+                    {% if user.is_authenticated %}
+                        <div class="d-flex align-items-center gap-4">
+                            {% if request.resolver_match.url_name != 'profile' %}
+                            <div class="user-profile-menu">
+                        <a class="nav-link" href="{% url 'football:profile' %}">
+                            <div class="user-avatar">
+                                        {% if user.user_profile.points >= 500 %}
+                                            <img src="{% static 'images/profile_images/diamond.png' %}" alt="Diamond Badge" class="profile-picture">
+                                        {% elif user.user_profile.points >= 100 %}
+                                            <img src="{% static 'images/profile_images/platinum.png' %}" alt="Platinum Badge" class="profile-picture">
+                                        {% elif user.user_profile.points >= 50 %}
+                                            <img src="{% static 'images/profile_images/golden.png' %}" alt="Golden Badge" class="profile-picture">
+                                        {% elif user.user_profile.points >= 20 %}
+                                            <img src="{% static 'images/profile_images/silver.png' %}" alt="Silver Badge" class="profile-picture">
+                                {% else %}
+                                            <img src="{% static 'images/profile_images/bronze.png' %}" alt="Bronze Badge" class="profile-picture">
+                                {% endif %}
+                            </div>
+                                    <span class="username">{{ user.username }}</span>
+                        </a>
+                        <a class="nav-link" href="{% url 'football:logout' %}">
+                                    <i class="fas fa-sign-out-alt"></i>
+                                    <span>خروج</span>
+                        </a>
+                            </div>
+                            {% endif %}
+                        </div>
+                    {% else %}
+                        <div class="d-flex align-items-center gap-3">
+                        <a class="nav-link" href="{% url 'football:login' %}">
+                                <i class="fas fa-sign-in-alt"></i>
+                                <span>ورود</span>
+                        </a>
+                        <a class="nav-link" href="{% url 'football:register' %}">
+                                <i class="fas fa-user-plus"></i>
+                                <span>ثبت نام</span>
+                        </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Messages -->
+    {% if messages %}
+        <div class="container mt-3">
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <!-- Main Content -->
+    <main class="container my-4">
+        {% block content %}
+        {% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-light py-4">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5>predict777</h5>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <h5>تماس با ما</h5>
+                    <p style="color: white;">
+                        <i class="fas fa-envelope me-2"></i>ایمیل: <a href="mailto: predictmatch77@gmail.com" style="color: white !important; text-decoration: none;">predictmatch77@gmail.com</a><br>
+                        <i class="fab fa-telegram me-2"></i> <a target="_blank" href="https://t.me/predict7770" style="color: white !important; text-decoration: none;">تلگرام</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap Bundle with Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Custom JavaScript -->
+    {% block extra_js %}
+    <script>
+        // Existing smooth hover effect
+        document.addEventListener('DOMContentLoaded', function() {
+            const expandButtons = document.querySelectorAll('.btn-expand');
+            expandButtons.forEach(button => {
+                button.addEventListener('mouseenter', function() {
+                    this.style.transform = 'translateY(-2px)';
+                });
+                button.addEventListener('mouseleave', function() {
+                    this.style.transform = 'translateY(0)';
+                });
+            });
+        });
+    </script>
+    {% endblock %}
+</body>
+</html> 

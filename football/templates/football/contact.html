@@ -1,0 +1,62 @@
+{% extends 'football/base.html' %}
+{% load static %}
+
+{% block title %}تماس با ما - پیش‌بینی فوتبال{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-lg">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0"><i class="fas fa-envelope me-2"></i>تماس با ما</h4>
+                </div>
+                <div class="card-body">
+                    {% if submitted %}
+                        <div class="alert alert-success">
+                            پیام شما با موفقیت ارسال شد. با تشکر از تماس شما!
+                        </div>
+                    {% else %}
+                        <form method="post">
+                            {% csrf_token %}
+                            <div class="mb-3">
+                                <label for="id_name" class="form-label">نام</label>
+                                {{ form.name }}
+                                {% if form.name.errors %}
+                                    <div class="text-danger small">{{ form.name.errors }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="mb-3">
+                                <label for="id_email" class="form-label">ایمیل</label>
+                                {{ form.email }}
+                                {% if form.email.errors %}
+                                    <div class="text-danger small">{{ form.email.errors }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="mb-3">
+                                <label for="id_subject" class="form-label">موضوع</label>
+                                {{ form.subject }}
+                                {% if form.subject.errors %}
+                                    <div class="text-danger small">{{ form.subject.errors }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="mb-3">
+                                <label for="id_message" class="form-label">پیام</label>
+                                {{ form.message }}
+                                {% if form.message.errors %}
+                                    <div class="text-danger small">{{ form.message.errors }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="text-center">
+                                <button type="submit" class="btn btn-primary btn-lg">
+                                    <i class="fas fa-paper-plane me-1"></i>ارسال پیام
+                                </button>
+                            </div>
+                        </form>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

@@ -1,0 +1,50 @@
+<div class="matches-container">
+    {% for match in matches %}
+        <!-- Your existing match display code -->
+    {% endfor %}
+</div>
+
+<!-- Add pagination controls -->
+<div class="pagination-container mt-4">
+    <nav aria-label="Page navigation">
+        <ul class="pagination justify-content-center">
+            {% if matches.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page=1{% if selected_sport %}&sport={{ selected_sport }}{% endif %}" aria-label="First">
+                        <span aria-hidden="true">&laquo;&laquo;</span>
+                    </a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ matches.previous_page_number }}{% if selected_sport %}&sport={{ selected_sport }}{% endif %}" aria-label="Previous">
+                        <span aria-hidden="true">&laquo;</span>
+                    </a>
+                </li>
+            {% endif %}
+
+            {% for num in matches.paginator.page_range %}
+                {% if matches.number == num %}
+                    <li class="page-item active">
+                        <span class="page-link">{{ num }}</span>
+                    </li>
+                {% elif num > matches.number|add:'-3' and num < matches.number|add:'3' %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ num }}{% if selected_sport %}&sport={{ selected_sport }}{% endif %}">{{ num }}</a>
+                    </li>
+                {% endif %}
+            {% endfor %}
+
+            {% if matches.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ matches.next_page_number }}{% if selected_sport %}&sport={{ selected_sport }}{% endif %}" aria-label="Next">
+                        <span aria-hidden="true">&raquo;</span>
+                    </a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ matches.paginator.num_pages }}{% if selected_sport %}&sport={{ selected_sport }}{% endif %}" aria-label="Last">
+                        <span aria-hidden="true">&raquo;&raquo;</span>
+                    </a>
+                </li>
+            {% endif %}
+        </ul>
+    </nav>
+</div> 

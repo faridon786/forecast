@@ -1,0 +1,56 @@
+{% extends 'football/base.html' %}
+{% load static %}
+
+{% block title %}قوانین و مقررات - predict777{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <div class="card shadow-lg">
+                <div class="card-header bg-primary text-white">
+                    <h1 class="text-center mb-0">
+                        <i class="fas fa-gavel me-2"></i>قوانین و مقررات
+                    </h1>
+                </div>
+                <div class="card-body">
+                    {% if terms %}
+                        <div class="text-justify">
+                            {{ terms.content|safe }}
+                        </div>
+                        <div class="text-muted text-center mt-4">
+                            <small>آخرین بروزرسانی: {{ terms.updated_at|date:"Y/m/d H:i" }}</small>
+                        </div>
+                    {% else %}
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            در حال حاضر محتوایی برای نمایش وجود ندارد.
+                        </div>
+                    {% endif %}
+
+                    <div class="text-center mt-4">
+                        <a href="{% url 'football:home' %}" class="btn btn-primary">
+                            <i class="fas fa-home me-2"></i>بازگشت به خانه
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .card {
+        transition: transform 0.2s;
+    }
+    .card:hover {
+        transform: translateY(-5px);
+    }
+    .text-justify {
+        text-align: justify;
+        text-justify: inter-word;
+    }
+</style>
+{% endblock %} 
