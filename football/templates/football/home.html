@@ -1,0 +1,752 @@
+{% extends 'football/base.html' %}
+{% load static %}
+{% block title %}خانه - predict777{% endblock %}
+
+{% block content %}
+<!-- Balance Card -->
+<div class="balance-section mb-4">
+    <div class="container">
+        <div class="balance-card">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <div class="balance-header">
+                        <i class="fas fa-wallet"></i>
+                        <h5>موجودی حساب</h5>
+                    </div>
+                    <div class="balance-amount">
+                        <span class="amount">{{ user.user_profile.balance }}</span>
+                        <span class="currency" style="font-weight: bold; font-size: larger;">$</span>
+                    </div>
+                </div>
+                <div class="col-md-4 text-md-end">
+                    <div class="d-flex flex-column align-items-center gap-2 w-100">
+                        <a href="{% url 'football:payment' %}" class="btn btn-success w-100">
+                            <i class="fas fa-wallet me-1"></i>شارژ حساب
+                        </a>
+                        <a href="{% url 'football:withdrawal_request' %}" class="btn btn-outline-light w-100" style="background-color: red;">
+                            <i class="fas fa-money-bill-wave me-1"></i>برداشت
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container mt-4">
+    <!-- Sport Filters -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex justify-content-center align-items-center">
+                        <a href="{% url 'football:home' %}" class="btn btn-outline-primary mx-2 {% if not selected_sport %}active{% endif %}">
+                            <img src="{% static 'images/all-sports.svg' %}" alt="همه" class="sport-icon me-2">
+                            همه
+                        </a>
+                        {% for sport in sports %}
+                        <a href="{% url 'football:home' %}?sport={{ sport.name }}" 
+                           class="btn btn-outline-primary mx-2 {% if selected_sport == sport.name %}active{% endif %}">
+                            {% if sport.icon %}
+                                <img src="{{ sport.icon.url }}" alt="{{ sport.display_name }}" class="sport-icon me-2">
+                            {% endif %}
+                            {{ sport.display_name }}
+                        </a>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<div class="row">
+        <!-- Left Column: Upcoming Matches -->
+    <div class="col-lg-8">
+            <div class="card shadow-sm mb-4">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">
+                    <i class="fas fa-calendar-alt me-2"></i>مسابقات پیش رو
+                        {% if selected_sport %}
+                            <small class="ms-2">({{ selected_sport }})</small>
+                        {% endif %}
+                </h4>
+            </div>
+            <div class="card-body">
+                {% if upcoming_matches %}
+                    {% for match in upcoming_matches %}
+                        <div class="match-card mb-3 p-3 border rounded">
+                            <div class="row align-items-center">
+                                <div class="col-md-4 text-center">
+                                    <img src="{{ match.home_team.logo.url }}" alt="{{ match.home_team.name }}" class="team-logo">
+                                        <h5 class="mt-2">{{ match.home_team.name }}(میزبان)</h5>
+                                </div>
+                                <div class="col-md-4 text-center">
+                                    <div class="match-time mt-2">
+                                        <i class="far fa-clock me-1"></i>
+                                            {{ match.date|date:"H:i" }}
+                                    </div>
+                                    <div class="match-venue mt-2">
+                                        <i class="fas fa-map-marker-alt me-1"></i>{{ match.venue|default:"-" }}
+                                    </div>
+                                    <div class="match-date">
+                                        {{ match.date|date:"Y/m/d" }}
+                                    </div>
+                                    
+                                    <div class="vs-badge">VS</div>
+                                    <div class="sport-badge mt-2">
+                                        <i class="fas fa-trophy me-1"></i>{{ match.sport.name }}
+                                    </div>
+                                </div>
+                                <div class="col-md-4 text-center">
+                                    <img src="{{ match.away_team.logo.url }}" alt="{{ match.away_team.name }}" class="team-logo">
+                                        <h5 class="mt-2">{{ match.away_team.name }}(مهمان)</h5>
+                                </div>
+                            </div>
+                            <div class="row mt-3">
+                                <div class="col-12">
+                                    <div class="match-description text-center">
+                                        <button class="btn btn-link p-0 text-info desc-toggle" style="text-decoration: none;" type="button" data-bs-toggle="collapse" data-bs-target="#desc-{{ match.id }}" aria-expanded="false" aria-controls="desc-{{ match.id }}">
+                                            <i class="fas fa-info-circle me-1"></i>جزثیات جوایز                                            <i class="fas fa-chevron-down ms-1 arrow-icon"></i>
+                                        </button>
+                                    </div>
+                                    <div class="collapse" id="desc-{{ match.id }}">
+                                        <div class="card card-body bg-light border-0 mt-2">
+                                            {{ match.description|default:"توضیحاتی برای این مسابقه ثبت نشده است." }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% if user.is_authenticated %}
+                                <div class="text-center mt-3">
+                                    <a href="{% url 'football:predict_match' match.id %}" class="btn btn-primary" style="width: 230px; background-color: green; margin: 0 auto;">
+                                        <i class="fas fa-bullseye me-1"></i>پیش‌بینی
+                                    </a>
+                                </div>
+                            {% else %}
+                                <div class="text-center mt-3">
+                                    <a href="{% url 'football:login' %}" class="btn btn-outline-primary">
+                                        برای پیش‌بینی وارد شوید
+                                    </a>
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+
+                    <!-- Pagination -->
+                    {% if upcoming_matches.has_other_pages %}
+                    <div class="pagination-container mt-4">
+                        <nav aria-label="Page navigation">
+                            <ul class="pagination justify-content-center">
+                                {% if upcoming_matches.has_previous %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page=1{% if selected_sport %}&sport={{ selected_sport }}{% endif %}" aria-label="First">
+                                            <span aria-hidden="true">&laquo;&laquo;</span>
+                                        </a>
+                                    </li>
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ upcoming_matches.previous_page_number }}{% if selected_sport %}&sport={{ selected_sport }}{% endif %}" aria-label="Previous">
+                                            <span aria-hidden="true">&laquo;</span>
+                                        </a>
+                                    </li>
+                                {% endif %}
+
+                                {% for num in upcoming_matches.paginator.page_range %}
+                                    {% if upcoming_matches.number == num %}
+                                        <li class="page-item active">
+                                            <span class="page-link">{{ num }}</span>
+                                        </li>
+                                    {% elif num > upcoming_matches.number|add:'-3' and num < upcoming_matches.number|add:'3' %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ num }}{% if selected_sport %}&sport={{ selected_sport }}{% endif %}">{{ num }}</a>
+                                        </li>
+                                    {% endif %}
+                                {% endfor %}
+
+                                {% if upcoming_matches.has_next %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ upcoming_matches.next_page_number }}{% if selected_sport %}&sport={{ selected_sport }}{% endif %}" aria-label="Next">
+                                            <span aria-hidden="true">&raquo;</span>
+                                        </a>
+                                    </li>
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ upcoming_matches.paginator.num_pages }}{% if selected_sport %}&sport={{ selected_sport }}{% endif %}" aria-label="Last">
+                                            <span aria-hidden="true">&raquo;&raquo;</span>
+                                        </a>
+                                    </li>
+                                {% endif %}
+                            </ul>
+                        </nav>
+                    </div>
+                    {% endif %}
+                {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-calendar-times fa-3x text-muted mb-3"></i>
+                        <p class="text-muted">در حال حاضر مسابقه‌ای وجود ندارد.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+        <!-- Right Column: Stats and Recent Results -->
+    <div class="col-lg-4">
+        {% if user.is_authenticated %}
+                <div class="card shadow-lg mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h2 class="text-center mb-0">
+                            <i class="fas fa-chart-pie me-2"></i>آمار شما
+                        </h2>
+                    </div>
+                    <div class="card-body">
+                        <!-- Total Points Section -->
+                        <div class="total-points-section text-center mb-4">
+                            <div class="points-circle">
+                                <div class="points-icon-wrapper">
+                                    <i class="fas fa-trophy text-warning fa-2x mb-2"></i>
+                                    <div class="points-glow"></div>
+                                </div>
+                                <h2 class="points-number" data-points="{{ total_points }}">0</h2>
+                                <p class="points-label">امتیاز کل</p>
+                                <div class="points-stars">
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Prediction Stats Grid -->
+                        <div class="stats-grid">
+                            <div class="stat-item">
+                                <div class="stat-icon">
+                                    <i class="fas fa-check-circle text-success"></i>
+                                </div>
+                                <div class="stat-info">
+                                    <h3>{{ correct_predictions_count }}</h3>
+                                    <p>پیش‌بینی صحیح</p>
+                                </div>
+                    </div>
+                            <div class="stat-item">
+                                <div class="stat-icon">
+                                    <i class="fas fa-times-circle text-danger"></i>
+                                </div>
+                                <div class="stat-info">
+                                    <h3>{{ wrong_predictions_count }}</h3>
+                                    <p>پیش‌بینی نادرست</p>
+                                </div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-icon">
+                                    <i class="fas fa-percentage text-info"></i>
+                                </div>
+                                <div class="stat-info">
+                                    <h3>{{ accuracy_percentage }}%</h3>
+                                    <p>دقت پیش‌بینی</p>
+                                </div>
+                            </div>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+
+            <!-- Recent Results -->
+        <div class="card shadow-sm">
+            <div class="card-header bg-info text-white">
+                <h4 class="mb-0">
+                    <i class="fas fa-trophy me-2"></i>مسابقات اخیر
+                </h4>
+            </div>
+            <div class="card-body">
+                {% if recent_results %}
+                    {% for match in recent_results %}
+                        <div class="result-item mb-3 p-2 border-bottom">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div class="team-info">
+                                    <small class="text-muted">{{ match.home_team.name }}</small>
+                                    <span class="badge bg-primary mx-2">{{ match.home_score }}</span>
+                                    <span class="text-muted">-</span>
+                                    <span class="badge bg-primary mx-2">{{ match.away_score }}</span>
+                                    <small class="text-muted">{{ match.away_team.name }}</small>
+                                </div>
+                                <small class="text-muted">{{ match.match_time|date:"Y/m/d" }}</small>
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-trophy fa-3x text-muted mb-3"></i>
+                        <p class="text-muted">هنوز نتیجه‌ای ثبت نشده است.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .team-logo {
+        width: 80px;
+        height: 80px;
+        object-fit: contain;
+    }
+    .vs-badge {
+        background-color: #e9ecef;
+        color: #495057;
+        padding: 5px 15px;
+        border-radius: 20px;
+        font-weight: bold;
+    }
+    .match-card {
+        transition: transform 0.2s;
+    }
+    .match-card:hover {
+        transform: translateY(-2px);
+    }
+    .stats-item {
+        text-align: center;
+        padding: 10px;
+        border-radius: 5px;
+        background-color: #f8f9fa;
+    }
+    .result-item:hover {
+        background-color: #f8f9fa;
+    }
+    
+    /* New styles for sport filter */
+    .sport-badge {
+        display: inline-block;
+        background-color: #e9ecef;
+        color: #495057;
+        padding: 3px 10px;
+        border-radius: 15px;
+        font-size: 0.9rem;
+    }
+    
+    .btn-group {
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+    
+    .btn-group .btn {
+        border-radius: 20px !important;
+        padding: 0.5rem 1.5rem;
+    }
+    
+    @media (max-width: 768px) {
+        .btn-group {
+            flex-direction: column;
+            width: 100%;
+        }
+        
+        .btn-group .btn {
+            width: 100%;
+            margin: 0.2rem 0;
+        }
+    }
+
+    .sport-icon {
+        width: 24px;
+        height: 24px;
+        object-fit: contain;
+        transition: transform 0.3s ease;
+    }
+    .sport-icon:hover {
+        transform: scale(1.1);
+    }
+    .btn-outline-primary .sport-icon {
+        color: #0d6efd;
+    }
+    .btn-outline-primary.active .sport-icon {
+        color: white;
+    }
+    
+    /* Arrow rotation for collapsible description */
+    .arrow-icon {
+        transition: transform 0.3s ease;
+    }
+    .desc-toggle[aria-expanded="true"] .arrow-icon {
+        transform: rotate(180deg);
+    }
+
+    /* New styles for reorganized stats section */
+    .total-points-section {
+        padding: 1.5rem 0;
+        border-bottom: 1px solid #dee2e6;
+    }
+
+    .points-circle {
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        border-radius: 50%;
+        width: 150px;
+        height: 150px;
+        margin: 0 auto;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        position: relative;
+        overflow: hidden;
+        transition: transform 0.3s ease;
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    .points-circle:hover {
+        transform: scale(1.05);
+    }
+
+    .points-circle.animate-in {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    .points-icon-wrapper {
+        position: relative;
+        margin-bottom: 0.5rem;
+    }
+
+    .points-glow {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 40px;
+        height: 40px;
+        background: radial-gradient(circle, rgba(255,215,0,0.3) 0%, rgba(255,215,0,0) 70%);
+        border-radius: 50%;
+        animation: glow 2s infinite;
+    }
+
+    .points-number {
+        font-size: 2.5rem;
+        font-weight: bold;
+        background: linear-gradient(45deg, #0d6efd, #0dcaf0);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin: 0.5rem 0;
+        position: relative;
+    }
+
+    .points-label {
+        color: #6c757d;
+        margin: 0;
+        font-size: 1.1rem;
+        font-weight: 500;
+    }
+
+    .points-stars {
+        position: absolute;
+        bottom: 10px;
+        display: flex;
+        gap: 5px;
+    }
+
+    .points-stars i {
+        color: #ffc107;
+        font-size: 0.8rem;
+        opacity: 0.7;
+        animation: twinkle 1.5s infinite;
+    }
+
+    .points-stars i:nth-child(2) {
+        animation-delay: 0.5s;
+    }
+
+    .points-stars i:nth-child(3) {
+        animation-delay: 1s;
+    }
+
+    @keyframes glow {
+        0% { transform: translate(-50%, -50%) scale(1); opacity: 0.5; }
+        50% { transform: translate(-50%, -50%) scale(1.2); opacity: 0.8; }
+        100% { transform: translate(-50%, -50%) scale(1); opacity: 0.5; }
+    }
+
+    @keyframes twinkle {
+        0% { opacity: 0.3; transform: scale(1); }
+        50% { opacity: 1; transform: scale(1.2); }
+        100% { opacity: 0.3; transform: scale(1); }
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1rem;
+        margin-top: 1.5rem;
+    }
+
+    .stat-item {
+        text-align: center;
+        padding: 1rem;
+        background: #f8f9fa;
+        border-radius: 10px;
+        transition: transform 0.2s ease;
+    }
+
+    .stat-item:hover {
+        transform: translateY(-2px);
+    }
+
+    .stat-icon {
+        font-size: 1.5rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .stat-info h3 {
+        font-size: 1.5rem;
+        margin: 0.5rem 0;
+        color: #212529;
+    }
+
+    .stat-info p {
+        color: #6c757d;
+        margin: 0;
+        font-size: 0.9rem;
+    }
+
+    /* Updated styles for better spacing */
+    .container {
+        padding-bottom: 2rem;
+    }
+
+    .card {
+        margin-bottom: 1.5rem;
+    }
+
+    .card:last-child {
+        margin-bottom: 0;
+    }
+
+    /* Mobile-specific styles */
+    @media (max-width: 768px) {
+        .points-circle {
+            margin-top: 1rem;
+        }
+    }
+
+    .balance-section {
+        background: var(--primary-gradient);
+        padding: 0.4rem 0;
+        margin-top: 15px;
+        margin-bottom: 1rem;
+        box-shadow: 0 2px 8px rgba(38, 150, 229, 0.12);
+        border-radius: 100px;
+    }
+
+    .balance-card {
+        background: transparent;
+        padding: 0.25rem 1.5rem;
+        color: white;
+        transition: transform 0.3s ease;
+    }
+
+    .balance-card:hover {
+        transform: translateY(-1px);
+    }
+
+    .balance-header {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-bottom: 0;
+        padding: 0.25rem 0;
+    }
+
+    .balance-header i {
+        font-size: 1rem;
+        background: rgba(255, 255, 255, 0.2);
+        padding: 0.5rem;
+        border-radius: 6px;
+    }
+
+    .balance-header h5 {
+        margin: 0;
+        font-weight: 600;
+        font-size: 0.9rem;
+        padding: 0.25rem 0;
+    }
+
+    .balance-amount {
+        margin-bottom: 0;
+        padding: 0.25rem 0;
+    }
+
+    .balance-amount .amount {
+        font-size: 1.4rem;
+        font-weight: 700;
+        margin-left: 0.5rem;
+        padding: 0.25rem 0;
+    }
+
+    .balance-amount .currency {
+        font-size: 0.9rem;
+        opacity: 0.9;
+        padding: 0.25rem 0;
+    }
+
+    .btn-topup {
+        padding: 0.5rem 1.75rem;
+        font-weight: 500;
+        background: rgba(255, 255, 255, 0.2);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        backdrop-filter: blur(5px);
+        transition: all 0.3s ease;
+        border-radius: 100px;
+        font-size: 0.85rem;
+        margin: 0.25rem 0;
+    }
+
+    .btn-topup:hover {
+        background: rgba(255, 255, 255, 0.3);
+        border-color: rgba(255, 255, 255, 0.4);
+        transform: translateY(-1px);
+    }
+
+    .btn-topup i {
+        font-size: 0.9rem;
+        margin-left: 0.25rem;
+    }
+
+    @media (max-width: 768px) {
+        .balance-section {
+            margin-top: 15px;
+            padding: 0.35rem 0;
+            border-radius: 50px;
+        }
+
+        .balance-card {
+            padding: 0.25rem 1rem;
+        }
+
+        .balance-card {
+            text-align: center;
+        }
+
+        .balance-header {
+            justify-content: center;
+            padding: 0.25rem 0;
+        }
+
+        .balance-amount {
+            margin-bottom: 0.25rem;
+            padding: 0.25rem 0;
+        }
+
+        .balance-amount .amount {
+            font-size: 1.25rem;
+            padding: 0.25rem 0;
+        }
+
+        .btn-topup {
+            padding: 0.4rem 1.5rem;
+            margin: 0.25rem 0;
+        }
+    }
+
+    .balance-section .btn {
+        min-width: 160px;
+        height: 38px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.9rem;
+        padding: 0.5rem 1.5rem;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+    }
+
+    .balance-section .btn:hover {
+        transform: translateY(-1px);
+    }
+
+    .balance-section .btn-outline-light:hover {
+        background-color: #dc3545 !important;
+        border-color: #dc3545 !important;
+        color: white !important;
+    }
+
+    .balance-section .btn i {
+        font-size: 0.9rem;
+    }
+
+    @media (max-width: 768px) {
+        .balance-section .btn {
+            min-width: 140px;
+            height: 36px;
+            font-size: 0.85rem;
+            padding: 0.4rem 1.25rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const pointsElement = document.querySelector('.points-number');
+    const pointsCircle = document.querySelector('.points-circle');
+    const targetPoints = parseInt(pointsElement.dataset.points);
+    let currentPoints = 0;
+    let animationPlayed = false;
+
+    // Function to animate points
+    function animatePoints() {
+        if (animationPlayed) return;
+        
+        const duration = 2000; // 2 seconds
+        const steps = 60;
+        const increment = targetPoints / steps;
+        const stepDuration = duration / steps;
+
+        function updatePoints() {
+            if (currentPoints < targetPoints) {
+                currentPoints = Math.min(currentPoints + increment, targetPoints);
+                pointsElement.textContent = Math.round(currentPoints);
+                setTimeout(updatePoints, stepDuration);
+            }
+        }
+
+        // Add animation classes
+        pointsCircle.classList.add('animate-in');
+        updatePoints();
+        animationPlayed = true;
+    }
+
+    // Check if mobile
+    function isMobile() {
+        return window.innerWidth <= 768;
+    }
+
+    // If not mobile, play animation immediately
+    if (!isMobile()) {
+        animatePoints();
+    } else {
+        // Use Intersection Observer for mobile
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    animatePoints();
+                    observer.unobserve(entry.target); // Stop observing once animation plays
+                }
+            });
+        }, {
+            threshold: 0.5 // Trigger when 50% of the element is visible
+        });
+
+        observer.observe(pointsCircle);
+    }
+
+    // Handle window resize
+    window.addEventListener('resize', () => {
+        if (!isMobile() && !animationPlayed) {
+            animatePoints();
+        }
+    });
+});
+</script>
+{% endblock %} 

@@ -1,0 +1,261 @@
+{% extends 'football/base.html' %}
+{% load static %}
+
+{% block title %}پیش‌بینی‌های من - predict777{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-lg-10 mx-auto">
+            <div class="card shadow-lg">
+                <div class="card-header bg-primary text-white">
+                    <h1 class="text-center mb-0">
+                        <i class="fas fa-chart-line me-2"></i>پیش‌بینی‌های من
+                    </h1>
+                </div>
+                <div class="card-body">
+                    {% if predictions %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="d-none d-md-table-header-group">
+                                    <tr>
+                                        <th>ورزش</th>
+                                        <th>مسابقه</th>
+                                        <th>پیش‌بینی شما</th>
+                                        <th>نتیجه واقعی</th>
+                                        <th>وضعیت</th>
+                                        <th>تاریخ</th>
+                                        <th>عملیات</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for prediction in predictions %}
+                                    <tr class="prediction-row">
+                                        <td class="d-none d-md-table-cell">
+                                            <span class="badge bg-primary">{{ prediction.match.sport.display_name }}</span>
+                                        </td>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <img src="{{ prediction.match.home_team.logo.url }}" alt="{{ prediction.match.home_team.name }}" 
+                                                     class="team-logo me-2" style="width: 30px; height: 30px; object-fit: contain;">
+                                                <div class="match-info">
+                                                    <div class="d-md-none mb-2">
+                                                        <span class="badge bg-primary">{{ prediction.match.sport.display_name }}</span>
+                                                    </div>
+                                                    <div class="team-names">
+                                                        {{ prediction.match.home_team.name }}
+                                                        <span class="mx-2">-</span>
+                                                        {{ prediction.match.away_team.name }}
+                                                    </div>
+                                                    <div class="d-md-none mt-2">
+                                                        <small class="text-muted">{{ prediction.match.date|date:"Y/m/d H:i" }}</small>
+                                                    </div>
+                                                </div>
+                                                <img src="{{ prediction.match.away_team.logo.url }}" alt="{{ prediction.match.away_team.name }}" 
+                                                     class="team-logo me-2" style="width: 30px; height: 30px; object-fit: contain;">
+                                            </div>
+                                        </td>
+                                        <td class="d-none d-md-table-cell">
+                                            {{ prediction.home_team_score }} - {{ prediction.away_team_score }}
+                                        </td>
+                                        <td class="d-none d-md-table-cell">
+                                            {% if prediction.match.is_finished %}
+                                                {{ prediction.match.home_team_score }} - {{ prediction.match.away_team_score }}
+                                            {% else %}
+                                                <span class="text-muted">-</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if prediction.match.is_finished %}
+                                                {% if prediction.is_correct %}
+                                                    <span class="badge bg-success">صحیح</span>
+                                                {% else %}
+                                                    <span class="badge bg-danger">نادرست</span>
+                                                {% endif %}
+                                            {% else %}
+                                                <span class="badge bg-warning">در انتظار</span>
+                                            {% endif %}
+                                            <div class="d-md-none mt-2">
+                                                <small>پیش‌بینی: {{ prediction.home_team_score }} - {{ prediction.away_team_score }}</small>
+                                                {% if prediction.match.is_finished %}
+                                                    <br>
+                                                    <small>نتیجه: {{ prediction.match.home_team_score }} - {{ prediction.match.away_team_score }}</small>
+                                                {% endif %}
+                                            </div>
+                                        </td>
+                                        <td class="d-none d-md-table-cell">{{ prediction.match.date|date:"Y/m/d H:i" }}</td>
+                                        <td>
+                                            <button class="btn btn-expand" type="button" data-bs-toggle="collapse" 
+                                                    data-bs-target="#prediction-{{ prediction.id }}" 
+                                                    aria-expanded="false" 
+                                                    aria-controls="prediction-{{ prediction.id }}">
+                                                <i class="fas fa-chevron-down"></i>
+                                                <span class="expand-text">مشاهده جزئیات</span>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    <tr class="collapse-row">
+                                        <td colspan="7" class="p-0">
+                                            <div class="collapse" id="prediction-{{ prediction.id }}">
+                                                <div class="card card-body bg-light m-3">
+                                                    <div class="row">
+                                                        <div class="col-md-6">
+                                                            <h5 class="mb-3">جزئیات مسابقه</h5>
+                                                            <ul class="list-unstyled">
+                                                                <li><strong>ورزش:</strong> {{ prediction.match.sport.display_name }}</li>
+                                                                <li><strong>تاریخ:</strong> {{ prediction.match.date|date:"Y/m/d H:i" }}</li>
+                                                                <li><strong>وضعیت:</strong> 
+                                                                    {% if prediction.match.is_finished %}
+                                                                        <span class="badge bg-success">پایان یافته</span>
+                                                                    {% else %}
+                                                                        <span class="badge bg-warning">در انتظار</span>
+                                                                    {% endif %}
+                                                                </li>
+                                                            </ul>
+                                                        </div>
+                                                        <div class="col-md-6">
+                                                            <h5 class="mb-3">جزئیات پیش‌بینی</h5>
+                                                            <ul class="list-unstyled">
+                                                                <li><strong>پیش‌بینی شما:</strong> {{ prediction.home_team_score }} - {{ prediction.away_team_score }}</li>
+                                                                <li><strong>نتیجه واقعی:</strong> 
+                                                                    {% if prediction.match.is_finished %}
+                                                                        {{ prediction.match.home_team_score }} - {{ prediction.match.away_team_score }}
+                                                                    {% else %}
+                                                                        <span class="text-muted">-</span>
+                                                                    {% endif %}
+                                                                </li>
+                                                                <li><strong>وضعیت پیش‌بینی:</strong>
+                                                                    {% if prediction.match.is_finished %}
+                                                                        {% if prediction.is_correct %}
+                                                                            <span class="badge bg-success">صحیح</span>
+                                                                        {% else %}
+                                                                            <span class="badge bg-danger">نادرست</span>
+                                                                        {% endif %}
+                                                                    {% else %}
+                                                                        <span class="badge bg-warning">در انتظار</span>
+                                                                    {% endif %}
+                                                                </li>
+                                                            </ul>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            شما هنوز هیچ پیش‌بینی ثبت نکرده‌اید.
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .team-logo {
+        transition: transform 0.3s ease;
+    }
+    .team-logo:hover {
+        transform: scale(1.1);
+    }
+    .table > :not(caption) > * > * {
+        padding: 1rem;
+    }
+    .badge {
+        font-size: 0.9rem;
+        padding: 0.5em 0.8em;
+    }
+    .collapse-row {
+        background-color: #f8f9fa;
+    }
+    .collapse-row td {
+        border-top: none;
+    }
+    .btn-expand {
+        position: relative;
+        padding: 8px 16px;
+        background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+        border: none;
+        border-radius: 8px;
+        color: white;
+        font-weight: 600;
+        font-size: 0.9rem;
+        letter-spacing: 0.5px;
+        overflow: hidden;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(79, 70, 229, 0.2);
+        width: 100%;
+        max-width: 200px;
+    }
+    .btn-expand:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(79, 70, 229, 0.3);
+        background: linear-gradient(135deg, #4f46e5 0%, #4338ca 100%);
+    }
+    .btn-expand:active {
+        transform: translateY(1px);
+    }
+    .btn-expand i {
+        transition: transform 0.3s ease;
+    }
+    .btn-expand[aria-expanded="true"] i {
+        transform: rotate(180deg);
+    }
+    .card-body.bg-light {
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    }
+    .match-info {
+        flex: 1;
+    }
+    .team-names {
+        font-size: 0.95rem;
+        line-height: 1.4;
+    }
+    @media (max-width: 768px) {
+        .prediction-row td {
+            padding: 0.75rem;
+        }
+        .btn-expand {
+            padding: 6px 12px;
+            font-size: 0.85rem;
+            max-width: 100%;
+        }
+        .team-logo {
+            width: 25px !important;
+            height: 25px !important;
+        }
+        .team-names {
+            font-size: 0.9rem;
+        }
+        .badge {
+            font-size: 0.8rem;
+            padding: 0.4em 0.6em;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const expandButtons = document.querySelectorAll('.btn-expand');
+    expandButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const isExpanded = this.getAttribute('aria-expanded') === 'true';
+            const expandText = this.querySelector('.expand-text');
+            expandText.textContent = isExpanded ? 'بستن جزئیات' : 'مشاهده جزئیات';
+        });
+    });
+});
+</script>
+{% endblock %} 

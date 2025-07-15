@@ -1,0 +1,15 @@
+.profile-picture {
+    width: 150px;
+    height: 150px;
+    object-fit: cover;
+}
+
+.stat-box {
+    background-color: #f8f9fa;
+    border-radius: 8px;
+}
+
+.stat-box h3 {
+    margin-bottom: 0;
+    color: #007bff;
+} 

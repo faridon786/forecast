@@ -1,0 +1,331 @@
+{% extends 'football/base.html' %}
+{% load static %}
+
+{% block title %}پرداخت{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Payment Form Card -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-credit-card me-2"></i>پرداخت
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="{{ form.amount_usd.id_for_label }}" class="form-label">مبلغ (دلار)</label>
+                                    {{ form.amount_usd }}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="{{ form.network.id_for_label }}" class="form-label">شبکه پرداخت</label>
+                                    {{ form.network }}
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <div class="form-group">
+                                    <label for="{{ form.transaction_id.id_for_label }}" class="form-label">شناسه تراکنش</label>
+                                    {{ form.transaction_id }}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="text-center mt-4">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-check-circle me-2"></i>ثبت پرداخت
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Wallet Addresses and QR Codes -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-wallet me-2"></i>آدرس‌های کیف پول
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <!-- TRC20 Wallet -->
+                        <div class="col-md-6 mb-4">
+                            <div class="wallet-section p-3 bg-light rounded">
+                                <h5 class="mb-3">USDT (TRC20)</h5>
+                                <div class="qr-code mb-3 text-center">
+                                    <img src="data:image/png;base64,{{ trc20_qr_code }}" alt="TRC20 QR Code" class="img-fluid">
+                                </div>
+                                <div class="wallet-address">
+                                    <p class="mb-2">آدرس کیف پول:</p>
+                                    <div class="input-group">
+                                        <input type="text" class="form-control" value="{{ trc20_wallet_address }}" readonly>
+                                        <button class="btn btn-outline-primary copy-btn" data-clipboard-text="{{ trc20_wallet_address }}">
+                                            <i class="fas fa-copy"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- BNB Wallet -->
+                        <div class="col-md-6 mb-4">
+                            <div class="wallet-section p-3 bg-light rounded">
+                                <h5 class="mb-3">BNB (BEP20)</h5>
+                                <div class="qr-code mb-3 text-center">
+                                    <img src="data:image/png;base64,{{ bnb_qr_code }}" alt="BNB QR Code" class="img-fluid">
+                                </div>
+                                <div class="wallet-address">
+                                    <p class="mb-2">آدرس کیف پول:</p>
+                                    <div class="input-group">
+                                        <input type="text" class="form-control" value="{{ bnb_wallet_address }}" readonly>
+                                        <button class="btn btn-outline-primary copy-btn" data-clipboard-text="{{ bnb_wallet_address }}">
+                                            <i class="fas fa-copy"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Bitcoin Wallet -->
+                        <div class="col-md-6 mb-4">
+                            <div class="wallet-section p-3 bg-light rounded">
+                                <h5 class="mb-3">Bitcoin (BTC)</h5>
+                                <div class="qr-code mb-3 text-center">
+                                    <img src="data:image/png;base64,{{ btc_qr_code }}" alt="Bitcoin QR Code" class="img-fluid">
+                                </div>
+                                <div class="wallet-address">
+                                    <p class="mb-2">آدرس کیف پول:</p>
+                                    <div class="input-group">
+                                        <input type="text" class="form-control" value="{{ btc_wallet_address }}" readonly>
+                                        <button class="btn btn-outline-primary copy-btn" data-clipboard-text="{{ btc_wallet_address }}">
+                                            <i class="fas fa-copy"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Dogecoin Wallet -->
+                        <div class="col-md-6 mb-4">
+                            <div class="wallet-section p-3 bg-light rounded">
+                                <h5 class="mb-3">Dogecoin (DOGE)</h5>
+                                <div class="qr-code mb-3 text-center">
+                                    <img src="data:image/png;base64,{{ doge_qr_code }}" alt="Dogecoin QR Code" class="img-fluid">
+                                </div>
+                                <div class="wallet-address">
+                                    <p class="mb-2">آدرس کیف پول:</p>
+                                    <div class="input-group">
+                                        <input type="text" class="form-control" value="{{ doge_wallet_address }}" readonly>
+                                        <button class="btn btn-outline-primary copy-btn" data-clipboard-text="{{ doge_wallet_address }}">
+                                            <i class="fas fa-copy"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Tron Wallet -->
+                        <div class="col-md-6 mb-4">
+                            <div class="wallet-section p-3 bg-light rounded">
+                                <h5 class="mb-3">Tron (TRX) - شبکه TRC20</h5>
+                                <div class="qr-code mb-3 text-center">
+                                    <img src="data:image/png;base64,{{ trx_qr_code }}" alt="Tron QR Code" class="img-fluid">
+                                </div>
+                                <div class="wallet-address">
+                                    <p class="mb-2">آدرس کیف پول:</p>
+                                    <div class="input-group">
+                                        <input type="text" class="form-control" value="{{ trx_wallet_address }}" readonly>
+                                        <button class="btn btn-outline-primary copy-btn" data-clipboard-text="{{ trx_wallet_address }}">
+                                            <i class="fas fa-copy"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Cardano Wallet -->
+                        <div class="col-md-6 mb-4">
+                            <div class="wallet-section p-3 bg-light rounded">
+                                <h5 class="mb-3">Cardano (ADA)</h5>
+                                <div class="qr-code mb-3 text-center">
+                                    <img src="data:image/png;base64,{{ ada_qr_code }}" alt="Cardano QR Code" class="img-fluid">
+                                </div>
+                                <div class="wallet-address">
+                                    <p class="mb-2">آدرس کیف پول:</p>
+                                    <div class="input-group">
+                                        <input type="text" class="form-control" value="{{ ada_wallet_address }}" readonly>
+                                        <button class="btn btn-outline-primary copy-btn" data-clipboard-text="{{ ada_wallet_address }}">
+                                            <i class="fas fa-copy"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- TON Wallet -->
+                        <div class="col-md-6 mb-4">
+                            <div class="wallet-section p-3 bg-light rounded">
+                                <h5 class="mb-3">TON (TON)</h5>
+                                <div class="qr-code mb-3 text-center">
+                                    <img src="data:image/png;base64,{{ ton_qr_code }}" alt="TON QR Code" class="img-fluid">
+                                </div>
+                                <div class="wallet-address">
+                                    <p class="mb-2">آدرس کیف پول:</p>
+                                    <div class="input-group">
+                                        <input type="text" class="form-control" value="{{ ton_wallet_address }}" readonly>
+                                        <button class="btn btn-outline-primary copy-btn" data-clipboard-text="{{ ton_wallet_address }}">
+                                            <i class="fas fa-copy"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Payment Guide -->
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-info-circle me-2"></i>راهنمای واریز (شارژ حساب)
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <div class="payment-guide">
+                        <div class="alert alert-info">
+                            <h5 class="alert-heading">
+                                <i class="fas fa-info-circle me-2"></i>راهنمای واریز (شارژ حساب)
+                            </h5>
+                            
+                            <ol class="mb-4">
+                                <li><strong>ارز مورد نظر خود را از لیست بالا انتخاب کنید:</strong>
+                                    <ul>
+                                        <li>USDT (TRC20)</li>
+                                        <li>BNB (BEP20)</li>
+                                        <li>Bitcoin (BTC)</li>
+                                        <li>Dogecoin (DOGE)</li>
+                                        <li>TRX (TRON)</li>
+                                        <li>ADA (Cardano)</li>
+                                        <li>TON (TON)</li>
+                                    </ul>
+                                </li>
+                                
+                                <li>فقط از شبکه‌ی مشخص‌شده استفاده کنید. در صورت ارسال از شبکه اشتباه، وجه قابل بازیابی نیست.</li>
+                                
+                                <li>حداقل مقدار قابل واریز: ۵ دلار است.</li>
+                                
+                                <li>مبلغ مورد نظر را به آدرس نمایش‌داده‌شده ارسال نمایید.</li>
+                                
+                                <li>پس از واریز، کد پیگیری (TxID) تراکنش را در فرم ثبت واریز وارد کنید.</li>
+                                
+                                <li>کارمزد شبکه به‌صورت خودکار توسط سیستم محاسبه و کسر می‌شود.</li>
+                                
+                                <li>هر مقداری که شارژ کنید، دقیقاً همان مقدار (پس از کسر کارمزد شبکه) برایتان در حساب ثبت خواهد شد.</li>
+                                
+                                <li>مدت زمان پردازش شارژ: بین ۵ تا ۳۰ دقیقه پس از ثبت (TxID) هش تراکنش. (در موارد خاص حداکثر تا ۶۰ دقیقه)</li>
+                            </ol>
+
+                            <div class="alert alert-warning">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                <strong>توجه:</strong> فقط ارزهای ذکر شده در بالا پشتیبانی می‌شوند. از ارسال به سایر شبکه‌ها یا ارزهای غیرمجاز جداً خودداری فرمایید. در صورت ارسال اشتباه، مبلغ قابل برگشت نیست.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .wallet-section {
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+        height: 100%;
+    }
+    
+    .wallet-section:hover {
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        transform: translateY(-2px);
+    }
+    
+    .qr-code img {
+        max-width: 150px;
+        border: 1px solid #dee2e6;
+        padding: 10px;
+        border-radius: 8px;
+        background: white;
+    }
+    
+    .wallet-address input {
+        font-family: monospace;
+        font-size: 0.8rem;
+        word-break: break-all;
+    }
+    
+    .copy-btn {
+        min-width: 45px;
+    }
+    
+    .list-group-item {
+        border-right: none;
+        border-left: 1px solid #dee2e6;
+    }
+    
+    .form-control:focus {
+        border-color: #80bdff;
+        box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+    }
+    
+    /* Responsive adjustments for wallet grid */
+    @media (max-width: 768px) {
+        .col-md-6 {
+            margin-bottom: 1rem;
+        }
+        
+        .qr-code img {
+            max-width: 120px;
+        }
+        
+        .wallet-address input {
+            font-size: 0.7rem;
+        }
+    }
+    
+    @media (max-width: 576px) {
+        .qr-code img {
+            max-width: 100px;
+        }
+        
+        .wallet-section h5 {
+            font-size: 1rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.8/clipboard.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize clipboard.js
+    var clipboard = new ClipboardJS('.copy-btn');
+    
+    // Show success message when copied
+    clipboard.on('success', function(e) {
+        var btn = e.trigger;
+        var originalText = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-check"></i>';
+        setTimeout(function() {
+            btn.innerHTML = originalText;
+        }, 2000);
+        e.clearSelection();
+    });
+});
+</script>
+{% endblock %} 

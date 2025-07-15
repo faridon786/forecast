@@ -1,0 +1,214 @@
+{% extends 'football/base.html' %}
+{% load static %}
+
+{% block title %}جدول امتیازات - پیش‌بینی فوتبال{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <!-- Leaderboard Card -->
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-trophy me-2"></i>جدول امتیازات
+                    </h4>
+                </div>
+                <div class="card-body">
+                    {% if leaderboard %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>رتبه</th>
+                                    <th>نام کاربری</th>
+                                    <th>امتیاز</th>
+                                    <th>تعداد پیش‌بینی</th>
+                                    <th>عملیات</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for entry in leaderboard %}
+                                <tr {% if entry.user == request.user %}class="table-primary"{% endif %}>
+                                    <td>
+                                        {% if forloop.counter <= 5 %}
+                                            <i class="fas fa-trophy text-warning"></i>
+                                        {% endif %}
+                                        {{ forloop.counter }}
+                                    </td>
+                                    <td>{{ entry.user.username }}</td>
+                                    <td>{{ entry.points }}</td>
+                                    <td>{{ entry.total_predictions }}</td>
+                                    <td>
+                                        <button class="btn btn-expand" type="button" data-bs-toggle="collapse" 
+                                                data-bs-target="#profile-{{ entry.user.id }}" 
+                                                aria-expanded="false" 
+                                                aria-controls="profile-{{ entry.user.id }}">
+                                            <i class="fas fa-chevron-down"></i>
+                                            <span class="expand-text">مشاهده پروفایل</span>
+                                        </button>
+                                    </td>
+                                </tr>
+                                <tr class="collapse-row">
+                                    <td colspan="5" class="p-0">
+                                        <div class="collapse" id="profile-{{ entry.user.id }}">
+                                            <div class="card card-body bg-light m-3">
+                                                <div class="row">
+                                                    <div class="col-md-6">
+                                                        <h5 class="mb-3">آمار کلی</h5>
+                                                        <ul class="list-unstyled">
+                                                            <li><strong>امتیاز کل:</strong> {{ entry.points }}</li>
+                                                            <li><strong>تعداد کل پیش‌بینی‌ها:</strong> {{ entry.total_predictions }}</li>
+                                                            <li><strong>پیش‌بینی‌های صحیح:</strong> {{ entry.correct_predictions }}</li>
+                                                            <li><strong>پیش‌بینی‌های نادرست:</strong> {{ entry.wrong_predictions }}</li>
+                                                            <li><strong>درصد دقت:</strong> {{ entry.accuracy_percentage }}%</li>
+                                                        </ul>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <h5 class="mb-3">آخرین پیش‌بینی‌ها</h5>
+                                                        <ul class="list-unstyled">
+                                                            {% for prediction in entry.predictions %}
+                                                            <li class="mb-2">
+                                                                <div class="d-flex justify-content-between align-items-center">
+                                                                    <span>{{ prediction.match.home_team.name }} vs {{ prediction.match.away_team.name }}</span>
+                                                                    <span class="badge {% if prediction.is_correct %}bg-success{% else %}bg-danger{% endif %}">
+                                                                        {{ prediction.home_team_score }} - {{ prediction.away_team_score }}
+                                                                    </span>
+                                                                </div>
+                                                                <small class="text-muted">{{ prediction.match.date|date:"Y/m/d H:i" }}</small>
+                                                            </li>
+                                                            {% empty %}
+                                                            <li class="text-muted">هیچ پیش‌بینی ثبت نشده است.</li>
+                                                            {% endfor %}
+                                                        </ul>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <p class="text-muted">هنوز هیچ امتیازی ثبت نشده است.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .table th {
+        background-color: #f8f9fa;
+    }
+
+    .table-primary {
+        background-color: rgba(13, 110, 253, 0.1) !important;
+    }
+
+    .fa-trophy {
+        margin-left: 5px;
+    }
+
+    .btn-expand {
+        position: relative;
+        padding: 8px 16px;
+        background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+        border: none;
+        border-radius: 8px;
+        color: white;
+        font-weight: 600;
+        font-size: 0.9rem;
+        letter-spacing: 0.5px;
+        overflow: hidden;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(79, 70, 229, 0.2);
+        width: 100%;
+        max-width: 400px;
+        white-space: nowrap;
+    }
+
+    .btn-expand:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(79, 70, 229, 0.3);
+        background: linear-gradient(135deg, #4f46e5 0%, #4338ca 100%);
+    }
+
+    .btn-expand:active {
+        transform: translateY(1px);
+    }
+
+    .btn-expand i {
+        transition: transform 0.3s ease;
+        margin-left: 8px;
+    }
+
+    .btn-expand[aria-expanded="true"] i {
+        transform: rotate(180deg);
+    }
+
+    .collapse-row {
+        background-color: #f8f9fa;
+    }
+
+    .collapse-row td {
+        border-top: none;
+    }
+
+    .card-body.bg-light {
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    }
+
+    @media (max-width: 992px) {
+        .btn-expand {
+            max-width: 350px;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .table th, .table td {
+            padding: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        .btn-expand {
+            padding: 8px 12px;
+            font-size: 0.85rem;
+            max-width: 300px;
+            min-width: 250px;
+        }
+    }
+
+    @media (max-width: 576px) {
+        .btn-expand {
+            padding: 6px 10px;
+            font-size: 0.8rem;
+            max-width: 100%;
+            min-width: 200px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const expandButtons = document.querySelectorAll('.btn-expand');
+    expandButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const isExpanded = this.getAttribute('aria-expanded') === 'true';
+            const expandText = this.querySelector('.expand-text');
+            expandText.textContent = isExpanded ? 'بستن پروفایل' : 'مشاهده پروفایل';
+        });
+    });
+});
+</script>
+{% endblock %} 

@@ -1,0 +1,89 @@
+{% extends 'football/base.html' %}
+
+{% block title %}وضعیت پرداخت - predict777{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">
+                    <i class="fas fa-history me-2"></i>تاریخچه پرداخت‌ها
+                </h4>
+            </div>
+            <div class="card-body">
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+
+                {% if payments %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>تاریخ</th>
+                                    <th>شناسه تراکنش</th>
+                                    <th>مبلغ (دلار)</th>
+                                    <th>وضعیت</th>
+                                    <th>جزئیات</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for payment in payments %}
+                                    <tr>
+                                        <td>{{ payment.created_at|date:"Y/m/d H:i" }}</td>
+                                        <td>{{ payment.transaction_id }}</td>
+                                        <td>{{ payment.amount_usd }}</td>
+                                        <td>
+                                            {% if payment.status == 'pending' %}
+                                                <span class="badge bg-warning">در انتظار تایید</span>
+                                            {% elif payment.status == 'verified' %}
+                                                <span class="badge bg-success">تایید شده</span>
+                                            {% elif payment.status == 'rejected' %}
+                                                <span class="badge bg-danger">رد شده</span>
+                                            {% else %}
+                                                <span class="badge bg-secondary">منقضی شده</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if payment.notes %}
+                                                <button type="button" class="btn btn-sm btn-info" data-bs-toggle="tooltip" title="{{ payment.notes }}">
+                                                    <i class="fas fa-info-circle"></i>
+                                                </button>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-history fa-3x text-muted mb-3"></i>
+                        <p class="text-muted">شما هنوز هیچ پرداختی انجام نداده‌اید.</p>
+                        <a href="{% url 'football:payment' %}" class="btn btn-primary">
+                            <i class="fas fa-wallet me-2"></i>پرداخت جدید
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl)
+    })
+});
+</script>
+{% endblock %} 
